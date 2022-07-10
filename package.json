@@ -1,13 +1,14 @@
 {
   "name": "flayer",
-  "version": "0.0.1",
+  "version": "0.0.0-alpha.0",
   "description": "",
   "main": "dist/server.js",
   "types": "dist/server.d.ts",
   "scripts": {
     "test": "jest",
     "build": "tsc",
-    "watch": "tsc --watch"
+    "watch": "tsc --watch",
+    "prepare": "npm run build"
   },
   "keywords": [],
   "author": "",
