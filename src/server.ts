@@ -34,7 +34,6 @@ export function createServer(modules: Modules) {
         port,
       });
       wss.on("connection", (ws, req) => {
-        console.log("Connection established with a client");
         ws.on("message", async (rawMessage) => {
           // The messages handled here should only be invocation messages.
           const message = parseMessage(rawMessage.toString(), ws);

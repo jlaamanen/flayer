@@ -12,7 +12,6 @@ export async function connect(url: string) {
   const ws = new WebSocket(url);
   // client.connect(url);
   return new Promise<WebSocket>((resolve, reject) => {
-    console.log("WS", ws);
     ws.addEventListener("open", () => {
       resolve(ws);
     });

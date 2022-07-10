@@ -1,6 +1,5 @@
 import WebSocket from "ws";
 import { Context } from "./context";
-import { logger } from "./logger";
 import { getFunction } from "./modules";
 import { deserialize, serialize } from "./serialization";
 
@@ -56,16 +55,10 @@ export async function handleInvocationMessage(
   message: InvocationMessage,
   ws: WebSocket
 ) {
-  logger.debug(
-    `#${message.id} - Handling invocation message with path ${message.modulePath}/${message.functionName}`
-  );
   // Try to find the requested function from the modules
   const fn = getFunction(message.modulePath, message.functionName);
   if (!fn) {
     // Function was not found - let the client know via WS
-    logger.debug(
-      `#${message.id} - Function not found with path ${message.modulePath}/${message.functionName}`
-    );
     const errorMessage: CallbackErrorMessage = {
       type: "callback",
       id: message.id,
@@ -74,34 +67,17 @@ export async function handleInvocationMessage(
     ws.send(JSON.stringify(errorMessage));
     return;
   }
-  logger.debug(
-    `#${
-      message.id
-    } - Found the function, deserializing arguments: ${JSON.stringify(
-      message.data
-    )}`
-  );
   // Function was found - proceed with argument deserialization
   const args = deserialize(message.data);
-  logger.debug(
-    `#${message.id} - Deserialized arguments, executing the function`
-  );
   let callbackMessage: CallbackMessage = null;
   try {
     // Try to execute the function
     const result = await fn(...args);
-    logger.debug(
-      `#${message.id} - Execution successful, serializing the result`
-    );
     // Serialize the result
     const { json, functionMap } = serialize(result);
-    logger.debug(`#${message.id} - Result serialized: ${json}`);
     if (functionMap) {
       // If the function returned functions, start to listen to their results
       // TODO startCallbackListener for each function
-      logger.debug(
-        `#${message.id} - Arguments contained callback functions, started callback listeners`
-      );
     }
     // Form the callback result message
     callbackMessage = {
@@ -110,12 +86,8 @@ export async function handleInvocationMessage(
       data: json,
     };
   } catch (error) {
-    logger.debug(
-      `#${message.id} - Execution threw an error, serializing the error`
-    );
     // Form the callback error message (the function or serialization threw something)
     const { json } = serialize(error);
-    logger.debug(`#${message.id} - Error serialized: ${json}`);
     callbackMessage = {
       type: "callback",
       id: message.id,
@@ -124,11 +96,6 @@ export async function handleInvocationMessage(
   }
   // Finally send the result/error message back to client via WS
   ws.send(JSON.stringify(callbackMessage));
-  logger.debug(`#${message.id} - Sent the callback message`);
-}
-
-export function handleCallbackMessage(rawMessage: string) {
-  // TODO?
 }
 
 /**

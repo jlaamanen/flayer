@@ -34,7 +34,6 @@ const products: Product[] = [
  * @returns All products
  */
 export async function getAllProducts() {
-  console.log("GETTING ALL PRODUCTS");
   await sleep(1000);
   return [...products];
 }
