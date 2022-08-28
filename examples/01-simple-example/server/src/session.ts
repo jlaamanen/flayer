@@ -15,7 +15,7 @@ export function assertIsAdmin() {
  */
 export function assertIsLoggedIn() {
   const session = getSession();
-  if (!session.loggedIn) {
+  if (!session?.username) {
     throw new Error('User not logged in')
   }
 }

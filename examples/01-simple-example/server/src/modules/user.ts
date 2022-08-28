@@ -4,7 +4,6 @@ import { destroySession, getSession, setSession } from "flayer";
 // Override session type
 declare module "flayer" {
   interface Session {
-    loggedIn: boolean;
     username: string;
     isAdmin: boolean;
   }
@@ -51,7 +50,6 @@ export function authenticate(username: string, password: string) {
   }
   // Credentials OK, set user data to session
   setSession({
-    loggedIn: true,
     username: user.username,
     isAdmin: user.isAdmin,
   })

@@ -15,7 +15,7 @@
   {#await userPromise}
     <div>Loading...</div>
   {:then user}
-    {#if !user}
+    {#if !user?.username}
       <LoginForm on:login={reloadLoggedInUser} />
       <UsersTable />
     {:else}
