@@ -1,18 +1,10 @@
-import "dotenv/config";
 import { createServer } from "flayer";
 import * as products from "./modules/products";
+import * as user from './modules/user';
 
 const server = createServer({
   products,
-  module: {
-    subModule: {
-      subSubModule: {
-        helloWorld: (a: number, b: number) => {
-          return a + b;
-        },
-      },
-    },
-  },
+  user
 });
 
 if (process.env.NODE_ENV === "development") {

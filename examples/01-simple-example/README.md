@@ -1,6 +1,6 @@
-# 01-simple-example
+# 02-session-example
 
-This example contains the minimal setup for a full-stack Flayer application.
+This is an example project that demonstrates
 
 ## Client
 
@@ -8,7 +8,7 @@ Svelte TypeScript template
 
 ## Server
 
-Node.js with TypeScript, nodemon, dotenv and Flayer
+Node.js with TypeScript, nodemon and Flayer
 
 ## Server-pkg
 

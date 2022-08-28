@@ -1,3 +1,4 @@
+import { assertIsLoggedIn } from "../session";
 import { sleep } from "../util";
 
 /**
@@ -34,6 +35,7 @@ const products: Product[] = [
  * @returns All products
  */
 export async function getAllProducts() {
+  assertIsLoggedIn();
   await sleep(1000);
   return [...products];
 }

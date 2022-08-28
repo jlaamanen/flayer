@@ -1,26 +1,27 @@
 <script lang="ts">
-  import { getAllProducts } from "server-pkg/products";
+  import { getLoggedInUser } from "server-pkg/user";
+  import LoggedInView from "./LoggedInView.svelte";
+  import LoginForm from "./LoginForm.svelte";
+  import UsersTable from "./UsersTable.svelte";
 
-  let productsPromise = null;
+  let userPromise = getLoggedInUser();
 
-  function fetchProducts() {
-    productsPromise = getAllProducts();
+  function reloadLoggedInUser() {
+    userPromise = getLoggedInUser();
   }
 </script>
 
 <main>
-  {#if !productsPromise}
-    <button on:click={fetchProducts}>Load products</button>
-  {:else}
-    {#await productsPromise}
-      <p>Loading products...</p>
-    {:then products}
-      <pre>{JSON.stringify(products, null, 2)}</pre>
-      <button on:click={fetchProducts}>Reload products</button>
-    {:catch error}
-      <p>Error: {error.message}</p>
-    {/await}
-  {/if}
+  {#await userPromise}
+    <div>Loading...</div>
+  {:then user}
+    {#if !user}
+      <LoginForm on:login={reloadLoggedInUser} />
+      <UsersTable />
+    {:else}
+      <LoggedInView {user} on:logout={reloadLoggedInUser} />
+    {/if}
+  {/await}
 </main>
 
 <style>
@@ -33,17 +34,5 @@
     text-align: center;
     padding: 1em;
     margin: 0 auto;
-  }
-
-  p {
-    max-width: 14rem;
-    margin: 1rem auto;
-    line-height: 1.35;
-  }
-
-  @media (min-width: 480px) {
-    p {
-      max-width: none;
-    }
   }
 </style>

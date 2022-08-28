@@ -111,6 +111,9 @@ export function serialize(object: any): {
 }
 
 export function deserialize(json: string) {
+  if (json == null) {
+    return null;
+  }
   try {
     return JSON.parse(json, (key, value) => {
       if (!isSerialized(value)) {

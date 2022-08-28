@@ -4,22 +4,15 @@ import { WebSocket } from "ws";
 /**
  * Full async local storage object
  */
-interface Store {
+interface AsyncStore {
   /**
    * Current WebSocket connection.
    */
   ws: WebSocket;
   /**
-   * Current flayer context.
+   * Session ID
    */
-  context: Context;
-}
-
-/**
- * Flayer invocation context object.
- */
-export interface Context {
-  [key: string]: number | string | boolean;
+  sessionId: string;
 }
 
 /**
@@ -29,27 +22,24 @@ export interface Context {
 const asyncLocalStorage = new AsyncLocalStorage();
 
 /**
- * Runs given function with given context.
- * @param context
+ * Runs given function with given data in async context.
+ * @param data
  * @param callback
  */
 export function runWithAsyncStore(
-  store: Store,
+  data: AsyncStore,
   callback: () => void | Promise<void>
 ) {
-  asyncLocalStorage.run(store, callback);
+  asyncLocalStorage.run(data, callback);
 }
 
-// TODO: update context via ws
-export function updateContext(context: Context) {}
-
 /**
- * Returns current Flayer context.
- * @returns Flayer context
+ * Returns current session ID.
+ * @returns Sewssion ID
  */
-export function getContext<T extends Context = Context>() {
-  const store = asyncLocalStorage.getStore() as Store;
-  return store.context as T;
+export function getSessionId() {
+  const store = asyncLocalStorage.getStore() as AsyncStore;
+  return store.sessionId;
 }
 
 /**
@@ -57,6 +47,6 @@ export function getContext<T extends Context = Context>() {
  * @returns Websocket connection
  */
 export function getWebSocket() {
-  const store = asyncLocalStorage.getStore() as Store;
+  const store = asyncLocalStorage.getStore() as AsyncStore;
   return store.ws;
 }

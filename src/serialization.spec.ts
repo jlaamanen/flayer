@@ -2,7 +2,7 @@ import {
   deserialize,
   SerialiationError,
   serialize,
-  typeMarkers,
+  typeMarkers
 } from "./serialization";
 
 describe("Serialization", () => {
@@ -27,8 +27,6 @@ describe("Serialization", () => {
       };
       const serialized = serialize(original);
       const deserialized = deserialize(serialized.json);
-
-      console.error("serialized", serialized);
 
       expect(serialized.functionMap).toBeNull();
       expect(deserialized).toEqual(original);

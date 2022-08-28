@@ -1,5 +1,4 @@
 import WebSocket from "ws";
-import { Context } from "./context";
 import { getFunction } from "./modules";
 import { deserialize, serialize } from "./serialization";
 
@@ -11,7 +10,6 @@ export interface InvocationMessage {
   modulePath: string;
   functionName: string;
   data: string;
-  context?: Context;
 }
 
 export type CallbackMessage = CallbackSuccessMessage | CallbackErrorMessage;
@@ -34,11 +32,6 @@ export interface ErrorMessage {
   type: "error";
   id: string;
   error: string;
-}
-
-export interface UpdateContextMessage {
-  type: "update-context";
-  context: Context;
 }
 
 /**
@@ -86,7 +79,9 @@ export async function handleInvocationMessage(
       data: json,
     };
   } catch (error) {
+    console.error(error)
     // Form the callback error message (the function or serialization threw something)
+    // TODO better serialization for the error - it shouldn't really be JSON
     const { json } = serialize(error);
     callbackMessage = {
       type: "callback",
