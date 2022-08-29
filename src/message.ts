@@ -24,14 +24,20 @@ export interface CallbackSuccessMessage {
 export interface CallbackErrorMessage {
   type: "callback";
   id: string;
-  error: string;
+  error: {
+    name: string;
+    message: string;
+  };
   data?: undefined;
 }
 
 export interface ErrorMessage {
   type: "error";
   id: string;
-  error: string;
+  error: {
+    name: string;
+    message: string;
+  };
 }
 
 /**
@@ -55,7 +61,10 @@ export async function handleInvocationMessage(
     const errorMessage: CallbackErrorMessage = {
       type: "callback",
       id: message.id,
-      error: `Function "${message.modulePath}/${message.functionName}" not found`,
+      error: {
+        name: "FlayerError",
+        message: `Function "${message.modulePath}/${message.functionName}" not found`,
+      },
     };
     ws.send(JSON.stringify(errorMessage));
     return;
@@ -79,14 +88,14 @@ export async function handleInvocationMessage(
       data: json,
     };
   } catch (error) {
-    console.error(error)
-    // Form the callback error message (the function or serialization threw something)
-    // TODO better serialization for the error - it shouldn't really be JSON
-    const { json } = serialize(error);
+    console.error(error);
     callbackMessage = {
       type: "callback",
       id: message.id,
-      error: json,
+      error: {
+        name: error.constructor.name,
+        message: error.message,
+      },
     };
   }
   // Finally send the result/error message back to client via WS
@@ -112,10 +121,10 @@ export function parseMessage(rawMessage: string, ws: WebSocket) {
           JSON.stringify({
             type: "error",
             id: message.id,
-            error: JSON.stringify({
-              message: "missing_fields",
-              info: missingFields,
-            }),
+            error: {
+              name: "FlayerError",
+              message: `Missing fields: ${missingFields.join(", ")}`,
+            },
           } as ErrorMessage)
         );
         return null;
@@ -129,10 +138,10 @@ export function parseMessage(rawMessage: string, ws: WebSocket) {
           JSON.stringify({
             type: "error",
             id: message.id,
-            error: JSON.stringify({
-              message: "missing_fields",
-              info: missingFields,
-            }),
+            error: {
+              name: "FlayerError",
+              message: `Missing fields: ${missingFields.join(", ")}`,
+            },
           } as ErrorMessage)
         );
         return null;
@@ -144,10 +153,10 @@ export function parseMessage(rawMessage: string, ws: WebSocket) {
         JSON.stringify({
           type: "error",
           id: message.id,
-          error: JSON.stringify({
-            message: "unsupported_message_type",
-            info: message.type,
-          }),
+          error: {
+            name: "FlayerError",
+            message: `Unsupported message type: ${message.type}`,
+          },
         } as ErrorMessage)
       );
       return null;

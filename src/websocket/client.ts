@@ -47,7 +47,14 @@ export async function waitForMessage(
         }
         // A message matching the condition was received
         clearTimeout(timeoutHandle);
-        resolve(jsonMessage.data);
+        if (jsonMessage.error) {
+          const error = new Error(jsonMessage.error.message);
+          // TODO doesn't actually seem to do anything - maybe cast to FlayerError if type = "FlayerError"`
+          error.name = jsonMessage.error.name;
+          reject(error);
+        } else {
+          resolve(jsonMessage.data);
+        }
         ws.removeListener("message", messageCallback);
       } catch (error) {
         // Non-JSON message - ignore

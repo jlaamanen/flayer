@@ -5,16 +5,16 @@
   let username = "";
   let password = "";
 
-  const dispatch = createEventDispatcher()
+  const dispatch = createEventDispatcher();
 
   async function handleLogin() {
     try {
       await authenticate(username, password);
     } catch (error) {
-      // TODO
-      throw new Error();
+      console.error(error);
+      // TODO show error message
     }
-    dispatch('login')
+    dispatch("login");
   }
 </script>
 
@@ -34,4 +34,3 @@
   />
   <button type="submit">Login</button>
 </form>
-
