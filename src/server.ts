@@ -4,19 +4,19 @@ import { generatePackage } from "./codegen";
 import {
   ClientPackageConfig,
   defaultClientPackageConfig,
-  normalizeClientPackageConfig
+  normalizeClientPackageConfig,
 } from "./config/client-package-config";
 import {
   defaultServerConfig,
   normalizeServerConfig,
-  ServerConfig
+  ServerConfig,
 } from "./config/server-config";
 import { logger } from "./logger";
 import { handleInvocationMessage, parseMessage } from "./message";
 import { Modules, registerModules } from "./modules";
 import { getSessionIdFromCookies, handleHandshakeHeaders } from "./session";
 
-export { destroySession, getSession, Session, setSession } from './session';
+export { destroySession, getSession, setSession } from "./session";
 export { resolveFunction as resolve } from "./type-resolver";
 
 /**
@@ -38,10 +38,10 @@ export function createServer(modules: Modules) {
         port,
       });
       wss.on("headers", (headers, req) => {
-        handleHandshakeHeaders(req, headers, config)
+        handleHandshakeHeaders(req, headers, config);
       });
       wss.on("connection", (ws, req) => {
-        const sessionId = getSessionIdFromCookies(req.headers['cookie']);
+        const sessionId = getSessionIdFromCookies(req.headers["cookie"]);
         ws.on("message", async (rawMessage) => {
           // The messages handled here should only be invocation messages.
           const message = parseMessage(rawMessage.toString(), ws);

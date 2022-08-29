@@ -1,14 +1,5 @@
 import { destroySession, getSession, setSession } from "flayer";
 
-// TODO this would be better in session.ts, but seems that ts-node won't recognize the new type if it's over there
-// Override session type
-declare module "flayer" {
-  interface Session {
-    username: string;
-    isAdmin: boolean;
-  }
-}
-
 interface User {
   username: string;
   password: string;
@@ -18,16 +9,16 @@ interface User {
 // Some fixed test users, don't try this at home!
 const users: User[] = [
   {
-    username: 'admin',
-    password: 'ihavethepower',
+    username: "admin",
+    password: "ihavethepower",
     isAdmin: true,
   },
   {
-    username: 'normie',
-    password: 'password',
-    isAdmin: false
-  }
-]
+    username: "normie",
+    password: "password",
+    isAdmin: false,
+  },
+];
 
 /**
  * Double whoops - seems like we've exposed all our users and credentials!
@@ -44,15 +35,17 @@ export function getUsers() {
  * @param password Password
  */
 export function authenticate(username: string, password: string) {
-  const user = users.find(user => user.username === username && user.password === password);
+  const user = users.find(
+    (user) => user.username === username && user.password === password
+  );
   if (!user) {
-    throw new Error('Username or password incorrect')
+    throw new Error("Username or password incorrect");
   }
   // Credentials OK, set user data to session
   setSession({
     username: user.username,
     isAdmin: user.isAdmin,
-  })
+  });
 }
 
 /**
@@ -61,10 +54,12 @@ export function authenticate(username: string, password: string) {
  */
 export function getLoggedInUser() {
   const session = getSession();
-  return {
-    username: session.username,
-    isAdmin: session.isAdmin
-  }
+  return !session
+    ? null
+    : {
+        username: session.username,
+        isAdmin: session.isAdmin,
+      };
 }
 
 /**

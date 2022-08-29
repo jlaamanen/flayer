@@ -7,7 +7,12 @@ import { collapse } from "./utils";
 const sessionCookieKey = "flayer-session";
 export const sessionStore = createSessionStore();
 
-export interface Session {}
+// Use global scope for session to enable type overriding
+declare global {
+  namespace Flayer {
+    interface Session {}
+  }
+}
 
 /**
  * Generates a unique session ID.
@@ -40,28 +45,37 @@ export function getSessionIdFromCookies(cookies: string) {
  * @param req
  * @param headers
  */
-export function handleHandshakeHeaders(req: IncomingMessage, headers: string[], serverConfig: ServerConfig) {
+export function handleHandshakeHeaders(
+  req: IncomingMessage,
+  headers: string[],
+  serverConfig: ServerConfig
+) {
   let sessionId = getSessionIdFromCookies(req.headers["cookie"]);
   if (!sessionId) {
     // Create a new session and set it as a new cookie
     sessionId = generateSessionId();
     const cookieEntry = `${sessionCookieKey}=${sessionId}`;
-    const {cookie} = serverConfig.session ?? {};
-    headers.push(`Set-Cookie: ${[
-      cookieEntry,
-      (cookie?.secure ?? true) && 'Secure',
-      (cookie?.httpOnly ?? true) && 'HttpOnly',
-      collapse`Max-Age: ${cookie?.maxAge}`,
-      collapse`Domain: ${cookie?.domain}`,
-      collapse`Path: ${cookie?.path}`,
-      collapse`Same-Site: ${cookie?.sameSite}`
-    ].filter(Boolean).join('; ')}`)
+    const { cookie } = serverConfig.session ?? {};
+
+    headers.push(
+      `Set-Cookie: ${[
+        cookieEntry,
+        (cookie?.secure ?? true) && "Secure",
+        (cookie?.httpOnly ?? true) && "HttpOnly",
+        collapse`Max-Age: ${cookie?.maxAge}`,
+        collapse`Domain: ${cookie?.domain}`,
+        collapse`Path: ${cookie?.path}`,
+        collapse`Same-Site: ${cookie?.sameSite}`,
+      ]
+        .filter(Boolean)
+        .join("; ")}`
+    );
     // Add the session to the cookies for the current request
     req.headers["cookie"] += cookieEntry;
   }
   if (!sessionStore.get(sessionId)) {
     // Create an empty object as the new session if doesn't yet exist
-    sessionStore.set(sessionId, {})
+    sessionStore.set(sessionId, {});
   }
 }
 
@@ -76,13 +90,13 @@ export function getSession() {
 /**
  * Sets current session
  */
-export function setSession(session: Session) {
-  sessionStore.set(getSessionId(), session)
+export function setSession(session: Flayer.Session) {
+  sessionStore.set(getSessionId(), session);
 }
 
 /**
  * Destroys current session
  */
 export function destroySession() {
-  sessionStore.destroy(getSessionId())
+  sessionStore.destroy(getSessionId());
 }

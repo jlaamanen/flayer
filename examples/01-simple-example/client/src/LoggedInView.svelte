@@ -5,7 +5,7 @@
   import { createEventDispatcher } from "svelte";
   import ProductCard from "./ProductCard.svelte";
 
-  export let user: {username: string; isAdmin: boolean};
+  export let user: { username: string; isAdmin: boolean };
 
   const dispatch = createEventDispatcher();
 
@@ -23,10 +23,13 @@
 
 <h1>Welcome back, {user.username}!</h1>
 
-{#await productsPromise then products}
-    {#each products as product}
-      <ProductCard {product} />
-    {/each}
+{#await productsPromise}
+  <p>Loading...</p>
+{:then products}
+  {#each products as product}
+    <ProductCard {product} />
+  {/each}
+  <button on:click={reloadProducts}>Reload products</button>
 {/await}
 
 <button class="logout" on:click={handleLogout}>Log out</button>

@@ -2,7 +2,7 @@ import {
   deserialize,
   SerialiationError,
   serialize,
-  typeMarkers
+  typeMarkers,
 } from "./serialization";
 
 describe("Serialization", () => {
@@ -17,9 +17,9 @@ describe("Serialization", () => {
           [234, 432],
         ]),
         someSet: new Set(["a", "b", "c", "d"]),
+        someRegExp: /regexp/g,
         someArray: ["1", "2", "3"],
         someBigInt: BigInt("123456789012345678901234567890"),
-        someBuffer: Buffer.from("qwerty"),
         nan: NaN,
         infinity: Infinity,
         minusInfinity: -Infinity,

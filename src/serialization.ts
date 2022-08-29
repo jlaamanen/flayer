@@ -1,13 +1,11 @@
 import { v4 as uuidv4 } from "uuid";
 
-// TODO Buffer is not supported in browsers - should it be supported by serialization?
-
 export const typeMarkers = {
   date: "@Date",
   map: "@Map",
   set: "@Set",
-  bigint: "@BigInt",
-  // buffer: "@Buffer",
+  bigInt: "@BigInt",
+  regExp: "@RegExp",
   function: "@Function",
   special: "@SpecialValue",
   error: "@Error",
@@ -43,13 +41,13 @@ export function serialize(object: any): {
   let functionMap: Map<string, Function> = null;
   try {
     const json = JSON.stringify(object, (_, value) => {
-      // Some values (Date, Buffer) are serialized with toJSON _before_ running the replacer, making the values _always_ already serialized..
+      // Some values (e.g. Date) are serialized with toJSON _before_ running the replacer, making the values _always_ already serialized..
       // Replace nested values when found inside an object/array before reaching the actual value.
       if (
         typeof value === "object" &&
         !(value instanceof Map) &&
         !(value instanceof Set) &&
-        // !(value instanceof Buffer) &&
+        !(value instanceof RegExp) &&
         value != null
       ) {
         // Prevent mutations to the original object by creating a new one
@@ -58,9 +56,6 @@ export function serialize(object: any): {
           if (value[key] instanceof Date) {
             newValue[key] = [typeMarkers.date, value[key].toISOString()];
           }
-          // if (value[key] instanceof Buffer) {
-          //   newValue[key] = [typeMarkers.buffer, value[key].toString("base64")];
-          // }
         }
         return newValue;
       }
@@ -76,11 +71,14 @@ export function serialize(object: any): {
         functionMap = mergeFunctionMaps(functionMap, serialized.functionMap);
         return [typeMarkers.set, serialized.json];
       }
+      if (value instanceof RegExp) {
+        return [typeMarkers.regExp, [value.source, value.flags]];
+      }
       if (value instanceof Error) {
         return [typeMarkers.error, value.message];
       }
       if (typeof value === "bigint") {
-        return [typeMarkers.bigint, value.toString()];
+        return [typeMarkers.bigInt, value.toString()];
       }
       if (typeof value === "function") {
         if (!functionMap) {
@@ -127,12 +125,12 @@ export function deserialize(json: string) {
           return new Map(deserialize(serializedValue));
         case typeMarkers.set:
           return new Set(deserialize(serializedValue));
+        case typeMarkers.regExp:
+          return new RegExp(serializedValue[0], serializedValue[1]);
         case typeMarkers.error:
           return new Error(serializedValue);
-        case typeMarkers.bigint:
+        case typeMarkers.bigInt:
           return BigInt(serializedValue);
-        // case typeMarkers.buffer:
-        //   return Buffer.from(serializedValue, "base64");
         case typeMarkers.function:
           const fn = (...args) => {
             const functionId = serializedValue;
