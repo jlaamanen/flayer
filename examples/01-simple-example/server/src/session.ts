@@ -1,14 +1,5 @@
 import { getSession } from "flayer";
 
-// Override the session type
-declare global {
-  namespace Flayer {
-    interface Session {
-      username: string;
-      isAdmin: boolean;
-    }
-  }
-}
 /**
  * Guard function that checks if the user is admin
  */

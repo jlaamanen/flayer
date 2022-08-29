@@ -1,6 +1,8 @@
+import { Session } from "./session";
+
 export interface SessionStore {
-  get: (sessionId: string) => Flayer.Session;
-  set: (sessionId: string, session: Flayer.Session) => void;
+  get: (sessionId: string) => Session;
+  set: (sessionId: string, session: Session) => void;
   destroy: (sessionId: string) => void;
 }
 

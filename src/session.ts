@@ -7,12 +7,7 @@ import { collapse } from "./utils";
 const sessionCookieKey = "flayer-session";
 export const sessionStore = createSessionStore();
 
-// Use global scope for session to enable type overriding
-declare global {
-  namespace Flayer {
-    interface Session {}
-  }
-}
+export interface Session {}
 
 /**
  * Generates a unique session ID.
@@ -90,7 +85,7 @@ export function getSession() {
 /**
  * Sets current session
  */
-export function setSession(session: Flayer.Session) {
+export function setSession(session: Session) {
   sessionStore.set(getSessionId(), session);
 }
 

@@ -16,7 +16,7 @@ import { handleInvocationMessage, parseMessage } from "./message";
 import { Modules, registerModules } from "./modules";
 import { getSessionIdFromCookies, handleHandshakeHeaders } from "./session";
 
-export { destroySession, getSession, setSession } from "./session";
+export { destroySession, getSession, Session, setSession } from "./session";
 export { resolveFunction as resolve } from "./type-resolver";
 
 /**
