@@ -25,7 +25,7 @@ jobs:
       # Check if package.json version changed & parse the version
       - name: Check and parse changed package version
         id: check_version
-        run: >-
+        run: |
           VERSION=$(git diff HEAD~1 HEAD package.json | sed -rn 's/^\+.*"version".*:.*"(.*)",?/\1/p')
           POSTFIX=$(echo $VERSION | sed -rn 's/^.*-(.*)$/\1/p')
           echo "::set-output name=version::$VERSION"
