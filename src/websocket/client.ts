@@ -10,7 +10,6 @@ export async function connect(url: string) {
     throw new Error("No URL provided. Did you forget to configure the client?");
   }
   const ws = new WebSocket(url);
-  // client.connect(url);
   return new Promise<WebSocket>((resolve, reject) => {
     ws.addEventListener("open", () => {
       resolve(ws);
@@ -35,7 +34,11 @@ export async function waitForMessage(
     const timeoutHandle =
       timeout != null
         ? setTimeout(() => {
-            reject(new FlayerTimeoutError());
+            reject(
+              new FlayerTimeoutError(
+                "Timeout waiting for function result exceeded"
+              )
+            );
           }, timeout)
         : null;
 

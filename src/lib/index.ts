@@ -1,6 +1,6 @@
 import { WebSocket } from "isomorphic-ws";
 import { ClientConfig } from "../config/client-config";
-import { FlayerError } from "../error";
+import { FlayerConnectionError, FlayerError } from "../error";
 import { deserialize, serialize } from "../serialization";
 import { connect, sendMessage, waitForMessage } from "../websocket/client";
 
@@ -38,13 +38,17 @@ export async function executeFlayerFunction(
   args: any[]
 ) {
   let ws = get("ws");
-  if (!ws) {
+  if (!ws || ws.readyState !== ws.OPEN) {
     const config = get("config");
     if (!config) {
       throw new FlayerError("Client not configured");
     }
-    ws = await connect(config.url);
-    set("ws", ws);
+    try {
+      ws = await connect(config.url);
+      set("ws", ws);
+    } catch (error) {
+      throw new FlayerConnectionError("Error connecting to server");
+    }
   }
 
   let id = get("invocationId");

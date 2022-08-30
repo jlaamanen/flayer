@@ -88,7 +88,6 @@ export async function handleInvocationMessage(
       data: json,
     };
   } catch (error) {
-    console.error(error);
     callbackMessage = {
       type: "callback",
       id: message.id,
