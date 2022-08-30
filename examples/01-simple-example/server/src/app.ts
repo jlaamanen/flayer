@@ -1,10 +1,10 @@
 import { createServer } from "flayer";
 import * as products from "./modules/products";
-import * as user from './modules/user';
+import * as user from "./modules/user";
 
 const server = createServer({
   products,
-  user
+  user,
 });
 
 if (process.env.NODE_ENV === "development") {
@@ -20,4 +20,7 @@ if (process.env.NODE_ENV === "development") {
 
 server.start({
   port: 1234,
+  session: {
+    secret: "aaaaaaaa",
+  },
 });

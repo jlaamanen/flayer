@@ -6,11 +6,7 @@ import {
   defaultClientPackageConfig,
   normalizeClientPackageConfig,
 } from "./config/client-package-config";
-import {
-  defaultServerConfig,
-  normalizeServerConfig,
-  ServerConfig,
-} from "./config/server-config";
+import { defaultServerConfig, ServerConfig } from "./config/server-config";
 import { logger } from "./logger";
 import { handleInvocationMessage, parseMessage } from "./message";
 import { Modules, registerModules } from "./modules";
@@ -18,6 +14,8 @@ import { getSessionIdFromCookies, handleHandshakeHeaders } from "./session";
 
 export { destroySession, getSession, Session, setSession } from "./session";
 export { resolveFunction as resolve } from "./type-resolver";
+
+const defaultPort = 1234;
 
 /**
  * Creates a Flayer server object with provided modules.
@@ -32,7 +30,7 @@ export function createServer(modules: Modules) {
      * @param config Flayer server configuration
      */
     async start(config: ServerConfig = defaultServerConfig) {
-      const { port } = await normalizeServerConfig(config);
+      const port = config.port ?? defaultPort;
       // TODO move WS server configuration to websocket/server.ts
       const wss = new WebSocketServer({
         port,
@@ -41,7 +39,10 @@ export function createServer(modules: Modules) {
         handleHandshakeHeaders(req, headers, config);
       });
       wss.on("connection", (ws, req) => {
-        const sessionId = getSessionIdFromCookies(req.headers["cookie"]);
+        const sessionId = getSessionIdFromCookies(
+          req.headers["cookie"],
+          config
+        );
         ws.on("message", async (rawMessage) => {
           // The messages handled here should only be invocation messages.
           const message = parseMessage(rawMessage.toString(), ws);

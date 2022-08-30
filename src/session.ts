@@ -1,4 +1,6 @@
+import { sign, unsign } from "cookie-signature";
 import { IncomingMessage } from "http";
+import UID from "uid-safe";
 import { getSessionId } from "./async-store";
 import { ServerConfig } from "./config/server-config";
 import { createSessionStore } from "./session-store";
@@ -14,21 +16,60 @@ export interface Session {}
  * @returns Session ID
  */
 function generateSessionId() {
-  // TODO something more secure
-  return Math.random().toString(36).substring(2);
+  return UID.sync(24);
+}
+
+/**
+ * Signs the given session ID with a secret defined in server config.
+ * @param sessionId Session ID
+ * @param serverConfig Server config
+ * @returns Signed session ID
+ */
+function signSessionId(sessionId: string, serverConfig: ServerConfig) {
+  const secret =
+    typeof serverConfig.session?.secret === "string"
+      ? serverConfig.session.secret
+      : serverConfig.session?.secret?.[0];
+  if (!secret) {
+    return sessionId;
+  }
+  return sign(sessionId, secret);
+}
+
+/**
+ * Tries to unsign given session ID with secret(s) found from server config.
+ * @param signedSessionId Signed session ID
+ * @param serverConfig Server config
+ * @returns Unsigned secret
+ */
+function unsignSessionId(signedSessionId: string, serverConfig: ServerConfig) {
+  const secrets =
+    typeof serverConfig.session?.secret === "string"
+      ? [serverConfig.session.secret]
+      : serverConfig.session?.secret ?? [];
+  const result = secrets.reduce<string | false>(
+    (result, secret) => result || unsign(signedSessionId, secret),
+    false
+  );
+  return result || signedSessionId;
 }
 
 /**
  * Tries to parse a session ID from cookies.
  * If not found, generates a new ID.
  * @param cookies
+ * @param serverConfig
  */
-export function getSessionIdFromCookies(cookies: string) {
-  const sessionId = cookies
+export function getSessionIdFromCookies(
+  cookies: string,
+  serverConfig: ServerConfig
+) {
+  const sessionIdCookie = cookies
     ?.split(";")
     .find((cookie) => cookie.startsWith(sessionCookieKey));
-  if (sessionId) {
-    return sessionId.split("=")[1];
+  if (sessionIdCookie) {
+    const signedId = sessionIdCookie.split("=")[1];
+    return unsignSessionId(signedId, serverConfig);
   }
   return null;
 }
@@ -45,11 +86,15 @@ export function handleHandshakeHeaders(
   headers: string[],
   serverConfig: ServerConfig
 ) {
-  let sessionId = getSessionIdFromCookies(req.headers["cookie"]);
+  let sessionId = getSessionIdFromCookies(req.headers["cookie"], serverConfig);
+  console.log("req cookies", req.headers["cookie"]);
   if (!sessionId) {
     // Create a new session and set it as a new cookie
     sessionId = generateSessionId();
-    const cookieEntry = `${sessionCookieKey}=${sessionId}`;
+    const cookieEntry = `${sessionCookieKey}=${signSessionId(
+      sessionId,
+      serverConfig
+    )}`;
     const { cookie } = serverConfig.session ?? {};
 
     headers.push(
@@ -79,6 +124,8 @@ export function handleHandshakeHeaders(
  * @returns Session
  */
 export function getSession() {
+  // TODO throw error if session not configured
+  // TODO what about 'null' or false session ID?
   return sessionStore.get(getSessionId());
 }
 
@@ -86,6 +133,7 @@ export function getSession() {
  * Sets current session
  */
 export function setSession(session: Session) {
+  // TODO throw error if session not configured
   sessionStore.set(getSessionId(), session);
 }
 
@@ -93,5 +141,6 @@ export function setSession(session: Session) {
  * Destroys current session
  */
 export function destroySession() {
+  // TODO throw error if session not configured
   sessionStore.destroy(getSessionId());
 }
