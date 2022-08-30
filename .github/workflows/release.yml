@@ -45,6 +45,7 @@ jobs:
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - uses: fregante/setup-git-user@v1
       - name: Tag
         if: ${{ steps.check_version.outputs.version != '' }}
         run: git tag -a v${{ steps.check_version.outputs.version }} -m "Version ${{ steps.check_version.outputs.version }}" && git push --tags

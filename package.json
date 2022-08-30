@@ -1,6 +1,6 @@
 {
   "name": "flayer",
-  "version": "0.0.0-alpha.1",
+  "version": "0.0.0-alpha.2",
   "description": "",
   "main": "dist/server.js",
   "types": "dist/server.d.ts",
