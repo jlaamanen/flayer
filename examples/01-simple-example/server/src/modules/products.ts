@@ -1,4 +1,4 @@
-import { assertIsLoggedIn } from "../session";
+import { assertIsAdmin, assertIsLoggedIn } from "../session";
 import { sleep } from "../util";
 
 /**
@@ -35,7 +35,7 @@ const products: Product[] = [
  * @returns All products
  */
 export async function getAllProducts() {
-  assertIsLoggedIn();
+  await assertIsLoggedIn();
   await sleep(1000);
   return [...products];
 }
@@ -46,6 +46,7 @@ export async function getAllProducts() {
  * @returns Product
  */
 export async function getProduct(id: number) {
+  await assertIsLoggedIn();
   await sleep(1000);
   return products.find((product) => product.id === id);
 }
@@ -57,6 +58,7 @@ export async function getProduct(id: number) {
  * @returns Product
  */
 export async function updateProduct(id: number, product: Product) {
+  await assertIsAdmin();
   await sleep(1000);
   const index = products.findIndex((p) => p.id === id);
   if (index === -1) {
@@ -72,6 +74,7 @@ export async function updateProduct(id: number, product: Product) {
  * @returns Product
  */
 export async function createProduct(product: Product) {
+  await assertIsAdmin();
   await sleep(1000);
   products.push(product);
   return product;
@@ -83,6 +86,7 @@ export async function createProduct(product: Product) {
  * @returns Was the product deleted?
  */
 export async function deleteProduct(id: number) {
+  await assertIsAdmin();
   await sleep(1000);
   const index = products.findIndex((p) => p.id === id);
   if (index === -1) {

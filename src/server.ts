@@ -1,5 +1,4 @@
-import { WebSocketServer } from "ws";
-import { runWithAsyncStore } from "./async-store";
+import { MemoryStore } from "express-session";
 import { generatePackage } from "./codegen";
 import {
   ClientPackageConfig,
@@ -7,15 +6,13 @@ import {
   normalizeClientPackageConfig,
 } from "./config/client-package-config";
 import { defaultServerConfig, ServerConfig } from "./config/server-config";
-import { logger } from "./logger";
-import { handleInvocationMessage, parseMessage } from "./message";
+import { FlayerError } from "./error";
 import { Modules, registerModules } from "./modules";
-import { getSessionIdFromCookies, handleHandshakeHeaders } from "./session";
+import { setSessionStore } from "./session";
+import { startWwbSocketServer } from "./websocket/server";
 
 export { destroySession, getSession, Session, setSession } from "./session";
 export { resolveFunction as resolve } from "./type-resolver";
-
-const defaultPort = 1234;
 
 /**
  * Creates a Flayer server object with provided modules.
@@ -30,33 +27,18 @@ export function createServer(modules: Modules) {
      * @param config Flayer server configuration
      */
     async start(config: ServerConfig = defaultServerConfig) {
-      const port = config.port ?? defaultPort;
-      // TODO move WS server configuration to websocket/server.ts
-      const wss = new WebSocketServer({
-        port,
-      });
-      wss.on("headers", (headers, req) => {
-        handleHandshakeHeaders(req, headers, config);
-      });
-      wss.on("connection", (ws, req) => {
-        const sessionId = getSessionIdFromCookies(
-          req.headers["cookie"],
-          config
-        );
-        ws.on("message", async (rawMessage) => {
-          // The messages handled here should only be invocation messages.
-          const message = parseMessage(rawMessage.toString(), ws);
-          if (!message || message.type !== "invocation") {
-            // Ignore non-invocation messages here - callbacks are handled in their own listeners
-            return;
-          }
-          // Make session ID and WS connection globally available within each execution context
-          runWithAsyncStore({ sessionId, ws }, async () => {
-            await handleInvocationMessage(message, ws);
-          });
-        });
-      });
-      logger.info(`Started Flayer server on port ${port}`);
+      // Validate session configuration if it exists
+      if (config.session) {
+        if (!config.session.secret) {
+          throw new FlayerError("Session secret not defined");
+        }
+        if (!config.session.store) {
+          // Use memory store by default, if store is not defined
+          setSessionStore(config.session.store ?? new MemoryStore());
+        }
+      }
+
+      startWwbSocketServer(config);
     },
     /**
      * Generates client-side package for invoking Flayer functions.

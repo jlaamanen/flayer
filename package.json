@@ -1,6 +1,6 @@
 {
   "name": "flayer",
-  "version": "0.0.0-alpha.3",
+  "version": "0.0.0-alpha.4",
   "description": "",
   "main": "dist/server.js",
   "types": "dist/server.d.ts",
@@ -15,6 +15,7 @@
   "license": "ISC",
   "devDependencies": {
     "@types/cookie-signature": "^1.0.4",
+    "@types/express-session": "^1.17.5",
     "@types/jest": "^27.0.2",
     "@types/node": "^16.10.3",
     "@types/uid-safe": "^2.1.2",
@@ -29,6 +30,7 @@
   "dependencies": {
     "cookie-signature": "^1.2.0",
     "esbuild": "^0.14.45",
+    "express-session": "^1.17.3",
     "func-loc": "^0.1.16",
     "get-port": "^5.1.1",
     "isomorphic-ws": "^4.0.1",

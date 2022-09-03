@@ -1,15 +1,43 @@
 import { sign, unsign } from "cookie-signature";
+import { Store } from "express-session";
 import { IncomingMessage } from "http";
 import UID from "uid-safe";
 import { getSessionId } from "./async-store";
 import { ServerConfig } from "./config/server-config";
-import { createSessionStore } from "./session-store";
+import { FlayerError } from "./error";
 import { collapse } from "./utils";
 
 const sessionCookieKey = "flayer-session";
-export const sessionStore = createSessionStore();
+let store: Store = null;
 
 export interface Session {}
+
+export interface SessionConfig {
+  /**
+   * Cookie configurations
+   */
+  cookie?: {
+    domain?: string;
+    expires?: string;
+    httpOnly?: boolean;
+    maxAge?: number;
+    path?: string;
+    secure?: boolean;
+    sameSite?: "Strict" | "Lax";
+  };
+  /**
+   * Session store
+   *
+   * Accepts express-session compatible stores.
+   */
+  store?: Store;
+  /**
+   * Session secret
+   *
+   * Used for signing session IDs for cookies to avoid session hijacking.
+   */
+  secret: string | string[];
+}
 
 /**
  * Generates a unique session ID.
@@ -87,7 +115,6 @@ export function handleHandshakeHeaders(
   serverConfig: ServerConfig
 ) {
   let sessionId = getSessionIdFromCookies(req.headers["cookie"], serverConfig);
-  console.log("req cookies", req.headers["cookie"]);
   if (!sessionId) {
     // Create a new session and set it as a new cookie
     sessionId = generateSessionId();
@@ -113,34 +140,66 @@ export function handleHandshakeHeaders(
     // Add the session to the cookies for the current request
     req.headers["cookie"] += cookieEntry;
   }
-  if (!sessionStore.get(sessionId)) {
-    // Create an empty object as the new session if doesn't yet exist
-    sessionStore.set(sessionId, {});
-  }
 }
 
 /**
- * Gets current session object
+ * Sets given session store to be available in this module.
+ * @param sessionStore Session store
+ */
+export function setSessionStore(sessionStore: Store) {
+  store = sessionStore;
+}
+
+/**
+ * Get current session object.
  * @returns Session
  */
-export function getSession() {
-  // TODO throw error if session not configured
-  // TODO what about 'null' or false session ID?
-  return sessionStore.get(getSessionId());
+export async function getSession() {
+  if (!store) {
+    throw new FlayerError("Session not configured");
+  }
+  return new Promise<Session>((resolve, reject) => {
+    store.get(getSessionId(), (error, session) => {
+      if (error) {
+        return reject(error);
+      }
+      resolve(session);
+    });
+  });
+  // return promisify(new MemoryStore().get)(getSessionId()) as Session;
 }
 
 /**
- * Sets current session
+ * Set current session.
+ * @param session Session
  */
-export function setSession(session: Session) {
-  // TODO throw error if session not configured
-  sessionStore.set(getSessionId(), session);
+export async function setSession(session: Session) {
+  if (!store) {
+    throw new FlayerError("Session not configured");
+  }
+  return new Promise<void>((resolve, reject) => {
+    store.set(getSessionId(), session as any, (error) => {
+      if (error) {
+        return reject(error);
+      }
+      resolve();
+    });
+  });
 }
 
 /**
- * Destroys current session
+ * Destroy current session.
  */
-export function destroySession() {
-  // TODO throw error if session not configured
-  sessionStore.destroy(getSessionId());
+export async function destroySession() {
+  if (!store) {
+    throw new FlayerError("Session not configured");
+  }
+  return new Promise<void>((resolve, reject) => {
+    store.destroy(getSessionId(), (error) => {
+      if (error) {
+        return reject(error);
+      }
+      resolve();
+    });
+  });
 }

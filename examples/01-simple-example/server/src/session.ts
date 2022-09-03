@@ -3,8 +3,8 @@ import { getSession } from "flayer";
 /**
  * Guard function that checks if the user is admin
  */
-export function assertIsAdmin() {
-  const session = getSession();
+export async function assertIsAdmin() {
+  const session = await getSession();
   if (!session.isAdmin) {
     throw new Error("User not admin");
   }
@@ -13,8 +13,8 @@ export function assertIsAdmin() {
 /**
  * Guard function that checks if the user is logged in
  */
-export function assertIsLoggedIn() {
-  const session = getSession();
+export async function assertIsLoggedIn() {
+  const session = await getSession();
   if (!session?.username) {
     throw new Error("User not logged in");
   }

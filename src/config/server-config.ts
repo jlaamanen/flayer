@@ -1,3 +1,5 @@
+import { SessionConfig } from "../session";
+
 /**
  * Normalized server configuration.
  *
@@ -10,24 +12,7 @@ export interface ServerConfig {
    * Default `1234`
    */
   port?: number;
-  session?: {
-    cookie?: {
-      domain?: string;
-      expires?: string;
-      httpOnly?: boolean;
-      maxAge?: number;
-      path?: string;
-      secure?: boolean;
-      sameSite?: "Strict" | "Lax";
-    };
-    // TODO express-session like stores? they'd use old-school callback-based API
-    store?: {
-      get: () => string;
-      set: (id: string) => void;
-      destroy: () => void;
-    };
-    secret: string | string[];
-  };
+  session?: SessionConfig;
 }
 
 /**

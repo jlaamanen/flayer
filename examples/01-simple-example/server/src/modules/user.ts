@@ -52,8 +52,8 @@ export function authenticate(username: string, password: string) {
  * Get the currently logged in user info (username & is admin)
  * @returns Currently logged in user
  */
-export function getLoggedInUser() {
-  const session = getSession();
+export async function getLoggedInUser() {
+  const session = await getSession();
   return !session
     ? null
     : {

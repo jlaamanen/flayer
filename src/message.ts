@@ -88,6 +88,7 @@ export async function handleInvocationMessage(
       data: json,
     };
   } catch (error) {
+    console.error(error);
     callbackMessage = {
       type: "callback",
       id: message.id,
@@ -109,7 +110,7 @@ export async function handleInvocationMessage(
  */
 export function parseMessage(rawMessage: string, ws: WebSocket) {
   const message = JSON.parse(rawMessage);
-  // TODO more rules & more specific validations?
+
   switch (message.type) {
     case "invocation": {
       const missingFields = ["id", "modulePath", "functionName"].filter(

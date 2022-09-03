@@ -27,9 +27,12 @@ export function mergeSets<T, U>(a: Set<T>, b: Set<U>) {
  * @param values
  * @returns
  */
-export function collapse(strings: TemplateStringsArray, ...values: any[]): string {
-  if (values.some(value => value == null)) {
+export function collapse(
+  strings: TemplateStringsArray,
+  ...values: any[]
+): string {
+  if (values.some((value) => value == null)) {
     return null;
   }
-  return strings.map((str, index) => `${str}${values[index] ?? ''}`).join('')
+  return strings.map((str, index) => `${str}${values[index] ?? ""}`).join("");
 }
