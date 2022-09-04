@@ -1,4 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
+import { WebSocket } from "ws";
+import { sendMessage } from "./websocket/client";
 
 export const typeMarkers = {
   date: "@Date",
@@ -108,7 +110,7 @@ export function serialize(object: any): {
   }
 }
 
-export function deserialize(json: string) {
+export function deserialize(json: string, ws: WebSocket) {
   if (json == null) {
     return null;
   }
@@ -122,9 +124,9 @@ export function deserialize(json: string) {
         case typeMarkers.date:
           return new Date(serializedValue);
         case typeMarkers.map:
-          return new Map(deserialize(serializedValue));
+          return new Map(deserialize(serializedValue, ws));
         case typeMarkers.set:
-          return new Set(deserialize(serializedValue));
+          return new Set(deserialize(serializedValue, ws));
         case typeMarkers.regExp:
           return new RegExp(serializedValue[0], serializedValue[1]);
         case typeMarkers.error:
@@ -134,7 +136,12 @@ export function deserialize(json: string) {
         case typeMarkers.function:
           const fn = (...args) => {
             const functionId = serializedValue;
-            console.log("TODO: emit ws message with function id", functionId);
+            // TODO how about serialization here?
+            sendMessage(ws, {
+              type: "callback",
+              id: functionId,
+              args,
+            });
           };
           // Override function name with the key
           Object.defineProperty(fn, "name", { value: key, writable: false });

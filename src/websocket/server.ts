@@ -1,5 +1,5 @@
 import { WebSocketServer } from "ws";
-import { runWithAsyncStore } from "../async-store";
+import { getWebSocket, runWithAsyncStore } from "../async-store";
 import { ServerConfig } from "../config/server-config";
 import { logger } from "../logger";
 import { handleInvocationMessage, parseMessage } from "../message";
@@ -47,4 +47,12 @@ export function startWwbSocketServer(config: ServerConfig) {
   });
 
   logger.info(`Started Flayer server on port ${port}`);
+}
+
+/**
+ * Add a callback that gets executed when the connection is closed.
+ * @param callback Callback function
+ */
+export function onDisconnect(callback: () => void) {
+  getWebSocket().on("close", callback);
 }

@@ -11,8 +11,9 @@ import { Modules, registerModules } from "./modules";
 import { setSessionStore } from "./session";
 import { startWwbSocketServer } from "./websocket/server";
 
+// Exposed library functions/interfaces
 export { destroySession, getSession, Session, setSession } from "./session";
-export { resolveFunction as resolve } from "./type-resolver";
+export { onDisconnect } from "./websocket/server";
 
 /**
  * Creates a Flayer server object with provided modules.

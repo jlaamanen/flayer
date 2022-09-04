@@ -1,6 +1,7 @@
 import { WebSocket } from "isomorphic-ws";
 import { ClientConfig } from "../config/client-config";
 import { FlayerConnectionError, FlayerError } from "../error";
+import { Message } from "../message";
 import { deserialize, serialize } from "../serialization";
 import { connect, sendMessage, waitForMessage } from "../websocket/client";
 
@@ -62,13 +63,33 @@ export async function executeFlayerFunction(
     data: json,
   });
 
-  // TODO start event listeners for each function in functionMap
+  // Start event listeners for all "serialized" functions
+  Array.from(functionMap).forEach(([id, fn]) => {
+    const callback = async (event: MessageEvent) => {
+      // Parse the message and ignore non-relevant messages
+      const message = JSON.parse(event.data) as Message;
+      if (message.type !== "callback" || message.id !== id) {
+        return;
+      }
+
+      // Matching message found - deserialize args and invoke the callback function
+      const args = deserialize(message.args, ws);
+      await fn(...args);
+    };
+
+    // Assign the callback as a WebSocket event listener
+    ws.on("message", callback);
+    // On disconnect remove the event listener
+    ws.addEventListener("close", () => {
+      ws.off("message", callback);
+    });
+  });
 
   const result = await waitForMessage(ws, {
-    type: "callback",
+    type: "result",
     id,
   });
-  return deserialize(result);
+  return deserialize(result, ws);
 }
 
 /**
@@ -80,5 +101,3 @@ export async function configure(config: ClientConfig) {
   set("config", config);
   set("ws", await connect(config.url));
 }
-
-// TODO: Context/session functions

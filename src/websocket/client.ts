@@ -1,5 +1,5 @@
 import WebSocket, { MessageEvent } from "isomorphic-ws";
-import { FlayerTimeoutError } from "../error";
+import { FlayerError, FlayerTimeoutError } from "../error";
 
 /**
  * Creates a WebSocket client and connects to the provided Flayer server URL.
@@ -20,10 +20,21 @@ export async function connect(url: string) {
   });
 }
 
+/**
+ * Send any object as JSON via WebSocket
+ * @param ws WebSocket
+ * @param message Message as any object
+ */
 export async function sendMessage(ws: WebSocket, message: any) {
   ws.send(JSON.stringify(message));
 }
 
+/**
+ * Wait for a message that matches a given key/value condition.
+ * @param ws WebSocket
+ * @param condition Condition
+ * @param timeout Timeout in milliseconds
+ */
 export async function waitForMessage(
   ws: WebSocket,
   condition: { [key: string]: unknown },
@@ -51,9 +62,9 @@ export async function waitForMessage(
         // A message matching the condition was received
         clearTimeout(timeoutHandle);
         if (jsonMessage.error) {
-          const error = new Error(jsonMessage.error.message);
-          // TODO doesn't actually seem to do anything - maybe cast to FlayerError if type = "FlayerError"`
-          error.name = jsonMessage.error.name;
+          const SpecifiedError =
+            jsonMessage.error.name === "FlayerError" ? FlayerError : Error;
+          const error = new SpecifiedError(jsonMessage.error.message);
           reject(error);
         } else {
           resolve(jsonMessage.data);
@@ -63,7 +74,15 @@ export async function waitForMessage(
         // Non-JSON message - ignore
       }
     };
+
+    // Assign the callback to WebSocket listeners
     ws.addEventListener("message", messageCallback);
+
+    // If connection is closed, remove the callback & reject the promise
+    ws.addEventListener("close", () => {
+      ws.removeListener("message", messageCallback);
+      reject(new FlayerError("Client disconnected"));
+    });
   });
   return a;
 }

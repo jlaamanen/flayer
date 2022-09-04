@@ -11,8 +11,7 @@
     try {
       await authenticate(username, password);
     } catch (error) {
-      console.error(error);
-      // TODO show error message
+      alert(error);
     }
     dispatch("login");
   }

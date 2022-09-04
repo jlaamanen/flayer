@@ -26,7 +26,7 @@ describe("Serialization", () => {
         empty: null,
       };
       const serialized = serialize(original);
-      const deserialized = deserialize(serialized.json);
+      const deserialized = deserialize(serialized.json, null);
 
       expect(serialized.functionMap).toBeNull();
       expect(deserialized).toEqual(original);
@@ -58,7 +58,7 @@ describe("Serialization", () => {
         },
       };
       const serialized = serialize(original);
-      const deserialized = deserialize(serialized.json);
+      const deserialized = deserialize(serialized.json, null);
 
       expect(serialized.functionMap).toBeNull();
       expect(deserialized).toEqual(original);
@@ -78,7 +78,7 @@ describe("Serialization", () => {
         -Infinity,
       ];
       const serialized = serialize(original);
-      const deserialized = deserialize(serialized.json);
+      const deserialized = deserialize(serialized.json, null);
 
       expect(serialized.functionMap).toBeNull();
       expect(deserialized).toEqual(original);
@@ -87,7 +87,7 @@ describe("Serialization", () => {
     test("should handle top-level sets", () => {
       const original = new Set([1, 2, 3, 4, [new Date()]]);
       const serialized = serialize(original);
-      const deserialized = deserialize(serialized.json);
+      const deserialized = deserialize(serialized.json, null);
 
       expect(serialized.functionMap).toBeNull();
       expect(deserialized).toEqual(original);
@@ -100,7 +100,7 @@ describe("Serialization", () => {
         [5, new Date()],
       ]);
       const serialized = serialize(original);
-      const deserialized = deserialize(serialized.json);
+      const deserialized = deserialize(serialized.json, null);
 
       expect(serialized.functionMap).toBeNull();
       expect(deserialized).toEqual(original);
@@ -124,7 +124,7 @@ describe("Serialization", () => {
       const date = new Date();
       const classObject = new Foo("bar", date);
       const serialized = serialize(classObject);
-      const deserialized = deserialize(serialized.json);
+      const deserialized = deserialize(serialized.json, null);
 
       expect(serialized.functionMap).toBeNull();
       expect(deserialized).toEqual({
@@ -151,7 +151,7 @@ describe("Serialization", () => {
 
       // Cannot test the function execution without mocking websockets (out of scope here)
       // - just test that the type is function
-      const deserialized = deserialize(serialized.json);
+      const deserialized = deserialize(serialized.json, null);
       expect(typeof deserialized).toBe("function");
     });
   });

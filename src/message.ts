@@ -2,7 +2,11 @@ import WebSocket from "ws";
 import { getFunction } from "./modules";
 import { deserialize, serialize } from "./serialization";
 
-export type Message = InvocationMessage | CallbackMessage;
+export type Message =
+  | InvocationMessage
+  | ResultMessage
+  | CallbackMessage
+  | ErrorMessage;
 
 export interface InvocationMessage {
   type: "invocation";
@@ -12,23 +16,27 @@ export interface InvocationMessage {
   data: string;
 }
 
-export type CallbackMessage = CallbackSuccessMessage | CallbackErrorMessage;
+export type ResultMessage = ResultSuccessMessage | ResultErrorMessage;
 
-export interface CallbackSuccessMessage {
-  type: "callback";
+export interface ResultSuccessMessage {
+  type: "result";
   id: string;
   data: string;
-  error?: undefined;
 }
 
-export interface CallbackErrorMessage {
-  type: "callback";
+export interface ResultErrorMessage {
+  type: "result";
   id: string;
   error: {
     name: string;
     message: string;
   };
-  data?: undefined;
+}
+
+export interface CallbackMessage {
+  type: "callback";
+  id: string;
+  args: string;
 }
 
 export interface ErrorMessage {
@@ -58,8 +66,8 @@ export async function handleInvocationMessage(
   const fn = getFunction(message.modulePath, message.functionName);
   if (!fn) {
     // Function was not found - let the client know via WS
-    const errorMessage: CallbackErrorMessage = {
-      type: "callback",
+    const errorMessage: ResultErrorMessage = {
+      type: "result",
       id: message.id,
       error: {
         name: "FlayerError",
@@ -69,28 +77,51 @@ export async function handleInvocationMessage(
     ws.send(JSON.stringify(errorMessage));
     return;
   }
+
   // Function was found - proceed with argument deserialization
-  const args = deserialize(message.data);
-  let callbackMessage: CallbackMessage = null;
+  const args = deserialize(message.data, ws);
+  let resultMessage: ResultMessage = null;
   try {
     // Try to execute the function
     const result = await fn(...args);
     // Serialize the result
     const { json, functionMap } = serialize(result);
+
+    // If the function returned functions, start to listen to their results
     if (functionMap) {
-      // If the function returned functions, start to listen to their results
-      // TODO startCallbackListener for each function
+      Array.from(functionMap.entries()).forEach(([id, fn]) => {
+        const callback = async (event: MessageEvent) => {
+          // Parse the message and ignore non-relevant messages
+          const message = JSON.parse(event.data) as Message;
+          if (message.type !== "callback" || message.id !== id) {
+            return;
+          }
+
+          // Matching message found - deserialize args and invoke the callback function
+          const args = deserialize(message.args, ws);
+          await fn(...args);
+        };
+
+        // Assign the callback as a WebSocket event listener
+        ws.on("message", callback);
+        // On disconnect remove the event listener
+        ws.addEventListener("close", () => {
+          ws.off("message", callback);
+        });
+      });
     }
-    // Form the callback result message
-    callbackMessage = {
-      type: "callback",
+
+    // Form the result message
+    resultMessage = {
+      type: "result",
       id: message.id,
       data: json,
     };
   } catch (error) {
+    // Error during invocation - log it and send it back to the client
     console.error(error);
-    callbackMessage = {
-      type: "callback",
+    resultMessage = {
+      type: "result",
       id: message.id,
       error: {
         name: error.constructor.name,
@@ -99,7 +130,7 @@ export async function handleInvocationMessage(
     };
   }
   // Finally send the result/error message back to client via WS
-  ws.send(JSON.stringify(callbackMessage));
+  ws.send(JSON.stringify(resultMessage));
 }
 
 /**
@@ -131,7 +162,9 @@ export function parseMessage(rawMessage: string, ws: WebSocket) {
       }
       break;
     }
-    case "callback": {
+
+    case "callback":
+    case "result": {
       const missingFields = ["id"].filter((field) => message[field] == null);
       if (missingFields.length > 0) {
         ws.send(
@@ -148,6 +181,7 @@ export function parseMessage(rawMessage: string, ws: WebSocket) {
       }
       break;
     }
+
     default:
       ws.send(
         JSON.stringify({
