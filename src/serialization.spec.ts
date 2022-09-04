@@ -1,9 +1,4 @@
-import {
-  deserialize,
-  SerialiationError,
-  serialize,
-  typeMarkers,
-} from "./serialization";
+import { deserialize, SerialiationError, serialize } from "./serialization";
 
 describe("Serialization", () => {
   describe("with basic values", () => {
@@ -25,10 +20,9 @@ describe("Serialization", () => {
         minusInfinity: -Infinity,
         empty: null,
       };
-      const serialized = serialize(original);
-      const deserialized = deserialize(serialized.json, null);
+      const serialized = serialize(original, null);
+      const deserialized = deserialize(serialized, null);
 
-      expect(serialized.functionMap).toBeNull();
       expect(deserialized).toEqual(original);
     });
 
@@ -57,10 +51,9 @@ describe("Serialization", () => {
           },
         },
       };
-      const serialized = serialize(original);
-      const deserialized = deserialize(serialized.json, null);
+      const serialized = serialize(original, null);
+      const deserialized = deserialize(serialized, null);
 
-      expect(serialized.functionMap).toBeNull();
       expect(deserialized).toEqual(original);
     });
 
@@ -77,19 +70,18 @@ describe("Serialization", () => {
         Infinity,
         -Infinity,
       ];
-      const serialized = serialize(original);
-      const deserialized = deserialize(serialized.json, null);
+      const serialized = serialize(original, null);
+      const deserialized = deserialize(serialized, null);
 
-      expect(serialized.functionMap).toBeNull();
+      expect(serialized).toBeNull();
       expect(deserialized).toEqual(original);
     });
 
     test("should handle top-level sets", () => {
       const original = new Set([1, 2, 3, 4, [new Date()]]);
-      const serialized = serialize(original);
-      const deserialized = deserialize(serialized.json, null);
+      const serialized = serialize(original, null);
+      const deserialized = deserialize(serialized, null);
 
-      expect(serialized.functionMap).toBeNull();
       expect(deserialized).toEqual(original);
     });
 
@@ -99,10 +91,9 @@ describe("Serialization", () => {
         [3, 4],
         [5, new Date()],
       ]);
-      const serialized = serialize(original);
-      const deserialized = deserialize(serialized.json, null);
+      const serialized = serialize(original, null);
+      const deserialized = deserialize(serialized, null);
 
-      expect(serialized.functionMap).toBeNull();
       expect(deserialized).toEqual(original);
     });
 
@@ -123,36 +114,13 @@ describe("Serialization", () => {
 
       const date = new Date();
       const classObject = new Foo("bar", date);
-      const serialized = serialize(classObject);
-      const deserialized = deserialize(serialized.json, null);
+      const serialized = serialize(classObject, null);
+      const deserialized = deserialize(serialized, null);
 
-      expect(serialized.functionMap).toBeNull();
       expect(deserialized).toEqual({
         bar: "bar",
         baz: date,
       });
-    });
-  });
-
-  describe("with functions", () => {
-    test("should handle a single function", () => {
-      const original = (a: number, b: number) => {
-        return a + b;
-      };
-      const serialized = serialize(original);
-      const functionMapKeys = Array.from(serialized.functionMap.keys());
-      expect(functionMapKeys).toHaveLength(1);
-
-      // Check the function ID matches in the serialized JSON
-      expect(JSON.parse(serialized.json)).toEqual([
-        typeMarkers.function,
-        functionMapKeys[0],
-      ]);
-
-      // Cannot test the function execution without mocking websockets (out of scope here)
-      // - just test that the type is function
-      const deserialized = deserialize(serialized.json, null);
-      expect(typeof deserialized).toBe("function");
     });
   });
 
@@ -162,7 +130,7 @@ describe("Serialization", () => {
         bar = "bar";
         circular = this;
       }
-      expect(() => serialize(new Circular())).toThrow(SerialiationError);
+      expect(() => serialize(new Circular(), null)).toThrow(SerialiationError);
     });
   });
 });

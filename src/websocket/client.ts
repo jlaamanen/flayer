@@ -69,7 +69,7 @@ export async function waitForMessage(
         } else {
           resolve(jsonMessage.data);
         }
-        ws.removeListener("message", messageCallback);
+        ws.removeEventListener("message", messageCallback);
       } catch (error) {
         // Non-JSON message - ignore
       }
@@ -80,7 +80,7 @@ export async function waitForMessage(
 
     // If connection is closed, remove the callback & reject the promise
     ws.addEventListener("close", () => {
-      ws.removeListener("message", messageCallback);
+      ws.removeEventListener("message", messageCallback);
       reject(new FlayerError("Client disconnected"));
     });
   });

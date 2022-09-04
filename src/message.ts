@@ -85,37 +85,13 @@ export async function handleInvocationMessage(
     // Try to execute the function
     const result = await fn(...args);
     // Serialize the result
-    const { json, functionMap } = serialize(result);
-
-    // If the function returned functions, start to listen to their results
-    if (functionMap) {
-      Array.from(functionMap.entries()).forEach(([id, fn]) => {
-        const callback = async (event: MessageEvent) => {
-          // Parse the message and ignore non-relevant messages
-          const message = JSON.parse(event.data) as Message;
-          if (message.type !== "callback" || message.id !== id) {
-            return;
-          }
-
-          // Matching message found - deserialize args and invoke the callback function
-          const args = deserialize(message.args, ws);
-          await fn(...args);
-        };
-
-        // Assign the callback as a WebSocket event listener
-        ws.on("message", callback);
-        // On disconnect remove the event listener
-        ws.addEventListener("close", () => {
-          ws.off("message", callback);
-        });
-      });
-    }
+    const data = serialize(result, ws);
 
     // Form the result message
     resultMessage = {
       type: "result",
       id: message.id,
-      data: json,
+      data,
     };
   } catch (error) {
     // Error during invocation - log it and send it back to the client

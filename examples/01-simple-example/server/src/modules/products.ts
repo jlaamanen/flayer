@@ -1,5 +1,9 @@
+import { onDisconnect } from "flayer";
 import { assertIsAdmin, assertIsLoggedIn } from "../session";
 import { sleep } from "../util";
+
+// Product change callback listeners
+let listeners: ((products: Product[]) => void)[] = [];
 
 /**
  * Product
@@ -29,6 +33,15 @@ const products: Product[] = [
   { id: 3, name: "Product 3", price: "300", createdAt: new Date() },
   { id: 4, name: "Product 4", price: "400", createdAt: new Date() },
 ];
+
+/**
+ * Notify all listeners that the products were changed
+ */
+function notifyProductsChanged() {
+  listeners.forEach((callback) => {
+    callback(products);
+  });
+}
 
 /**
  * Get all products from the database
@@ -65,6 +78,7 @@ export async function updateProduct(id: number, product: Product) {
     throw new Error(`Product with ID ${id} not found`);
   }
   products[index] = product;
+  notifyProductsChanged();
   return product;
 }
 
@@ -77,6 +91,7 @@ export async function createProduct(product: Product) {
   await assertIsAdmin();
   await sleep(1000);
   products.push(product);
+  notifyProductsChanged();
   return product;
 }
 
@@ -93,5 +108,20 @@ export async function deleteProduct(id: number) {
     throw new Error(`Product with ID ${id} not found`);
   }
   products.splice(index, 1);
+  notifyProductsChanged();
   return true;
+}
+
+/**
+ * Assign a listener that gets executed whenever products are changed.
+ * @param callback Callback function
+ */
+export async function onProductsChange(
+  callback: (products: Product[]) => void
+) {
+  listeners.push(callback);
+
+  onDisconnect(() => {
+    listeners = listeners.filter((listener) => listener !== callback);
+  });
 }

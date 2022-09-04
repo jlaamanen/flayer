@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import { WebSocket } from "ws";
+import { Message } from "./message";
 import { sendMessage } from "./websocket/client";
 
 export const typeMarkers = {
@@ -23,24 +24,46 @@ function isSerialized(value: any) {
   );
 }
 
-function mergeFunctionMaps(a: Map<string, Function>, b: Map<string, Function>) {
-  if (!a && !b) {
-    return null;
-  }
-  if (!b) {
-    return a;
-  }
-  if (!a) {
-    return b;
-  }
-  return new Map([...(!a ? [] : Array.from(a)), ...(!b ? [] : Array.from(b))]);
+/**
+ * Starts a callback listener for "serialized" functions
+ * @param ws WebSocket
+ * @param fn Function
+ */
+function startCallbackListener(ws: WebSocket, fn: Function) {
+  const id = uuidv4();
+
+  const callback = async (event: MessageEvent) => {
+    // Parse the message and ignore non-relevant messages
+    const message = JSON.parse(event.data) as Message;
+    if (message.type !== "callback" || message.id !== id) {
+      return;
+    }
+
+    // Matching message found - deserialize args and invoke the callback function
+    const args = deserialize(message.args, ws);
+    await fn(...args);
+  };
+
+  // Assign the callback as a WebSocket event listener
+  (ws as any).addEventListener("message", callback);
+  // On disconnect remove the event listener
+  ws.addEventListener("close", () => {
+    (ws as any).removeEventListener("message", callback);
+  });
+
+  return id;
 }
 
-export function serialize(object: any): {
-  json: string;
-  functionMap: Map<string, Function>;
-} {
-  let functionMap: Map<string, Function> = null;
+/**
+ * Serializes the given object.
+ *
+ * If contains functions, starts listening to their invocations via WebSocket.
+ *
+ * @param object Object to be serialized
+ * @param ws WebSocket
+ * @returns Serialized string
+ */
+export function serialize(object: any, ws: WebSocket): string {
   try {
     const json = JSON.stringify(object, (_, value) => {
       // Some values (e.g. Date) are serialized with toJSON _before_ running the replacer, making the values _always_ already serialized..
@@ -63,15 +86,13 @@ export function serialize(object: any): {
       }
       if (value instanceof Map) {
         // Serialize the Map contents - add possible new functions to the function map too
-        const serialized = serialize(Array.from(value.entries()));
-        functionMap = mergeFunctionMaps(functionMap, serialized.functionMap);
-        return [typeMarkers.map, serialized.json];
+        const serialized = serialize(Array.from(value.entries()), ws);
+        return [typeMarkers.map, serialized];
       }
       if (value instanceof Set) {
         // Serialize the Set contents - add possible new functions to the function map too
-        const serialized = serialize(Array.from(value.values()));
-        functionMap = mergeFunctionMaps(functionMap, serialized.functionMap);
-        return [typeMarkers.set, serialized.json];
+        const serialized = serialize(Array.from(value.values()), ws);
+        return [typeMarkers.set, serialized];
       }
       if (value instanceof RegExp) {
         return [typeMarkers.regExp, [value.source, value.flags]];
@@ -83,11 +104,7 @@ export function serialize(object: any): {
         return [typeMarkers.bigInt, value.toString()];
       }
       if (typeof value === "function") {
-        if (!functionMap) {
-          functionMap = new Map();
-        }
-        const id = uuidv4();
-        functionMap.set(id, value);
+        const id = startCallbackListener(ws, value);
         return [typeMarkers.function, id];
       }
       if (typeof value === "number" && isNaN(value)) {
@@ -101,15 +118,21 @@ export function serialize(object: any): {
       }
       return value;
     });
-    return {
-      json,
-      functionMap,
-    };
+    return json;
   } catch (error) {
     throw new SerialiationError(error.message);
   }
 }
 
+/**
+ * Deserializes the given JSON string.
+ *
+ * If contains functions, wraps them into functions that send a message via WwbSocket.
+ *
+ * @param json Serialized object as JSON
+ * @param ws WebSocket
+ * @returns Deserialized object
+ */
 export function deserialize(json: string, ws: WebSocket) {
   if (json == null) {
     return null;
@@ -134,13 +157,12 @@ export function deserialize(json: string, ws: WebSocket) {
         case typeMarkers.bigInt:
           return BigInt(serializedValue);
         case typeMarkers.function:
-          const fn = (...args) => {
+          const fn = (...args: any[]) => {
             const functionId = serializedValue;
-            // TODO how about serialization here?
             sendMessage(ws, {
               type: "callback",
               id: functionId,
-              args,
+              args: serialize(args, ws),
             });
           };
           // Override function name with the key
@@ -163,6 +185,7 @@ export function deserialize(json: string, ws: WebSocket) {
       }
     });
   } catch (error) {
+    console.error(error);
     throw new Error("serialization_error");
   }
 }

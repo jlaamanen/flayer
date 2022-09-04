@@ -28,6 +28,33 @@ export function createProduct(product: Product): Promise<Product>;
  * @returns Was the product deleted?
  */
 export function deleteProduct(id: number): Promise<boolean>;
+/**
+ * Assign a listener that gets executed whenever products are changed.
+ * @param callback Callback function
+ */
+export function onProductsChange(callback: (products: Product[]) => void): Promise<void>;
+
+/**
+ * Product
+ */
+interface Product {
+    /**
+     * ID of the product
+     */
+    id: number;
+    /**
+     * Name of the product
+     */
+    name: string;
+    /**
+     * Price of the product
+     */
+    price: string;
+    /**
+     * Creation timestamp of the product
+     */
+    createdAt: Date;
+}
 
 /**
  * Product

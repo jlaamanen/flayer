@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { getAllProducts } from "server-pkg/products";
+  import { getAllProducts, onProductsChange } from "server-pkg/products";
 
   import { logout } from "server-pkg/user";
-  import { createEventDispatcher } from "svelte";
+  import { createEventDispatcher, onMount } from "svelte";
   import ProductCard from "./ProductCard.svelte";
 
   export let user: { username: string; isAdmin: boolean };
@@ -19,6 +19,13 @@
     await logout();
     dispatch("logout");
   }
+
+  // Start to listen to any changes to products
+  onMount(() => {
+    onProductsChange((products) => {
+      productsPromise = Promise.resolve(products);
+    });
+  });
 </script>
 
 <h1>Welcome back, {user.username}!</h1>
