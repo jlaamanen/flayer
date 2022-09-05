@@ -78,3 +78,13 @@ export async function configure(config: ClientConfig) {
   set("config", config);
   set("ws", await connect(config.url));
 }
+
+/**
+ * Closes/invalidates the current WebSocket connection.
+ * Connection will be reopened on the next function invocation.
+ */
+export async function disconnect() {
+  const ws = get("ws");
+  ws.close();
+  set("ws", null);
+}

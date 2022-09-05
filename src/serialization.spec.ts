@@ -73,7 +73,6 @@ describe("Serialization", () => {
       const serialized = serialize(original, null);
       const deserialized = deserialize(serialized, null);
 
-      expect(serialized).toBeNull();
       expect(deserialized).toEqual(original);
     });
 

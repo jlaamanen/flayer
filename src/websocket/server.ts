@@ -32,6 +32,9 @@ export function startWwbSocketServer(config: ServerConfig) {
       ? getSessionIdFromCookies(req.headers["cookie"], config)
       : null;
 
+    // Set event listener limit
+    ws.setMaxListeners(config.maxListeners ?? 0);
+
     // Handle incoming messages
     ws.on("message", async (rawMessage) => {
       const message = parseMessage(rawMessage.toString(), ws);

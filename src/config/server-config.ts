@@ -12,6 +12,12 @@ export interface ServerConfig {
    * Default `1234`
    */
   port?: number;
+  /**
+   * Maximum amount of WebSocket server listeners.
+   *
+   * Default 0 (unlimited)
+   */
+  maxListeners?: number;
   session?: SessionConfig;
 }
 

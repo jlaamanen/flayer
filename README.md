@@ -3,8 +3,11 @@
 > **Warning!** ⚠️
 >
 > This library is experimental and should be used with caution.
+>
 
-Expose your Node.js backend functions to be invoked directly by your frontend. Without REST or GraphQL. With serialization built in.
+Make interactions between your TypeScript frontend and Node.js backend seamless: invoke your backend functions directly from your frontend.
+
+No more manual serialization or wrapping & unwrapping the data on the server or the client. Just use the functions as they were written in the first place.
 
 ## Quick start
 

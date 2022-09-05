@@ -1,6 +1,5 @@
 <script lang="ts">
   import { getAllProducts, onProductsChange } from "server-pkg/products";
-
   import { logout } from "server-pkg/user";
   import { createEventDispatcher, onMount } from "svelte";
   import ProductCard from "./ProductCard.svelte";
