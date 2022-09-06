@@ -1,6 +1,6 @@
 {
   "name": "flayer",
-  "version": "0.0.0-alpha.7",
+  "version": "0.0.0-alpha.8",
   "description": "",
   "main": "dist/main.js",
   "types": "dist/main.d.ts",
