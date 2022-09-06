@@ -25,6 +25,9 @@ export interface ResolvedFunction {
 
 const NodeFlagAmbient = 8388608;
 
+// Cache the project for performance
+let project: Project = null;
+
 type FunctionNode =
   | FunctionDeclaration
   | FunctionExpression
@@ -58,11 +61,15 @@ function getFunctionNode(sourceFile: SourceFile, position: number) {
 }
 
 export function getProject(options: ProjectOptions = {}) {
-  const service = process[require("ts-node").REGISTER_INSTANCE] as Service;
-  return new Project({
-    tsConfigFilePath: (service as any).configFilePath,
-    ...(options ?? {}),
-  });
+  // If project is not found in cache, create one
+  if (!project) {
+    const service = process[require("ts-node").REGISTER_INSTANCE] as Service;
+    project = new Project({
+      tsConfigFilePath: (service as any).configFilePath,
+      ...(options ?? {}),
+    });
+  }
+  return project;
 }
 
 /**
