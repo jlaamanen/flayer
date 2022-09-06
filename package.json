@@ -1,14 +1,17 @@
 {
   "name": "flayer",
-  "version": "0.0.0-alpha.6",
+  "version": "0.0.0-alpha.7",
   "description": "",
   "main": "dist/main.js",
   "types": "dist/main.d.ts",
   "scripts": {
     "test": "jest",
-    "build": "tsc",
-    "watch": "tsc --watch",
-    "prepare": "npm run build"
+    "prepare": "npm run build:pkg && npm run build:client-lib",
+    "build:pkg": "tsc",
+    "build:client-lib": "esbuild --bundle src/client-lib/index.ts --outdir=client-lib --minify --sourcemap --splitting --format=esm --target=esnext",
+    "watch:pkg": "tsc --watch",
+    "watch:client-lib": "npm run build:client-lib -- --watch",
+    "watch": "concurrently npm:watch:pkg npm:watch:client-lib"
   },
   "keywords": [],
   "author": "",
@@ -22,6 +25,7 @@
     "@types/uuid": "^8.3.1",
     "@types/websocket": "^1.0.5",
     "@types/ws": "^8.2.0",
+    "concurrently": "^7.3.0",
     "jest": "^27.2.5",
     "ts-jest": "^27.0.5",
     "ts-node": "^10.4.0",

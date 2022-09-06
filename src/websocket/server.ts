@@ -11,7 +11,7 @@ const defaultPort = 1234;
  * Starts Flayer WebSocket server.
  * @param config Server configuration
  */
-export function startWwbSocketServer(config: ServerConfig) {
+export function startWebSocketServer(config: ServerConfig) {
   const port = config.port ?? defaultPort;
 
   const wss = new WebSocketServer({
@@ -49,7 +49,7 @@ export function startWwbSocketServer(config: ServerConfig) {
     });
   });
 
-  logger.info(`Started Flayer server on port ${port}`);
+  logger.info(`\nFlayer started on port ${port}`);
 }
 
 /**

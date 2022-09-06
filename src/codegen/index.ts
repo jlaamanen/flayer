@@ -1,5 +1,10 @@
-import { build } from "esbuild";
-import { existsSync, mkdirSync, writeFileSync } from "fs";
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+} from "fs";
 import { resolve } from "path";
 import {
   InterfaceDeclaration,
@@ -8,13 +13,12 @@ import {
   TypeAliasDeclaration,
 } from "ts-morph";
 import { NormalizedClientPackageConfig } from "../config/client-package-config";
-import { logger } from "../logger";
 import { getModuleMap, Module } from "../modules";
 import { getProject, resolveFunction } from "../type-resolver";
 import { mergeSets } from "../utils";
 
 function generateJsFile(modulePath: string, functionNames: string[]) {
-  return `const { executeFlayerFunction } = require("flayer/dist/lib");
+  return `const { executeFlayerFunction } = require("flayer/dist/client-lib");
 
 ${functionNames
   .map(
@@ -42,7 +46,6 @@ async function generateSourceFiles(modulePath: string, module: Module) {
     new Set<InterfaceDeclaration | TypeAliasDeclaration>()
   );
 
-  console.log(`resolved functions in ${Date.now() - start}ms`);
   // Get declarations
   const declarationStructures = resolvedFunctions.map(
     (fn) => fn.declarationStructure
@@ -108,29 +111,16 @@ export async function generateModuleIndex(
   });
 
   moduleDeclaration.addExportDeclaration({
-    namedExports: ["configure", "getContext"],
-    moduleSpecifier: "flayer/dist/lib",
+    namedExports: ["configure", "disconnect"],
+    moduleSpecifier: "flayer/dist/client-lib",
   });
 
-  // Build with the lib index as entry point
-  const builtFiles = await build({
-    entryPoints: [resolve(__dirname, "../../src/lib/index.ts")],
-    bundle: true,
-    outdir: "temp",
-    sourcemap: true,
-    minify: true,
-    splitting: true,
-    format: "esm",
-    target: "esnext",
-    write: false,
-  }).then(({ outputFiles }) => {
-    return outputFiles.map((file) => ({
-      fileName: file.path.slice(
-        file.path.lastIndexOf("temp/") + "temp/".length
-      ),
-      text: file.text,
-    }));
-  });
+  // Read the pre-built lib files
+  const clientLibPath = resolve(__dirname, "../../client-lib");
+  const builtFiles = readdirSync(clientLibPath).map((fileName) => ({
+    fileName,
+    text: readFileSync(resolve(clientLibPath, fileName)).toString(),
+  }));
 
   return {
     dts: file.getFullText(),
@@ -164,9 +154,6 @@ function generatePackageJson(config: NormalizedClientPackageConfig) {
  * @param config Client package configuration
  */
 export async function generatePackage(config: NormalizedClientPackageConfig) {
-  const start = Date.now();
-  logger.info("Generating client package with config", config);
-
   // Generate .d.ts & .js files for each module
   const files = await Promise.all(
     Array.from(getModuleMap().entries()).map(([modulePath, module]) =>
@@ -189,12 +176,9 @@ export async function generatePackage(config: NormalizedClientPackageConfig) {
   moduleIndex.builtFiles.forEach((file) => {
     writeFile(`${config.path}/${file.fileName}`, file.text);
   });
-  // writeFile(`${config.path}/index.js`, moduleIndex.js);
 
   const packageJson = generatePackageJson(config);
   writeFile(`${config.path}/package.json`, packageJson);
-
-  console.log(`generated packages in ${Date.now() - start}ms`);
 }
 
 /**

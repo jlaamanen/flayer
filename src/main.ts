@@ -7,9 +7,10 @@ import {
 } from "./config/client-package-config";
 import { defaultServerConfig, ServerConfig } from "./config/server-config";
 import { FlayerError } from "./error";
-import { Modules, registerModules } from "./modules";
+import { logger } from "./logger";
+import { getModuleMap, Modules, registerModules } from "./modules";
 import { setSessionStore } from "./session";
-import { startWwbSocketServer } from "./websocket/server";
+import { startWebSocketServer } from "./websocket/server";
 
 // Exposed library functions/interfaces
 export { destroySession, getSession, Session, setSession } from "./session";
@@ -22,6 +23,20 @@ export { onDisconnect } from "./websocket/server";
  */
 export function createServer(modules: Modules) {
   registerModules(modules);
+
+  logger.info(`\nFlayer modules:`);
+  Array.from(getModuleMap().entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .forEach(([moduleName, module]) => {
+      console.log(`\n📦 "${moduleName}"`);
+      Object.keys(module)
+        .sort((a, b) => a.localeCompare(b))
+        .forEach((functionName, index, array) => {
+          const connector = index === array.length - 1 ? "└─" : "├─";
+          console.log(`${connector} 🟢 ${functionName}`);
+        });
+    });
+
   return {
     /**
      * Starts the Flayer server.
@@ -39,7 +54,7 @@ export function createServer(modules: Modules) {
         }
       }
 
-      startWwbSocketServer(config);
+      startWebSocketServer(config);
     },
     /**
      * Generates client-side package for invoking Flayer functions.
@@ -48,8 +63,17 @@ export function createServer(modules: Modules) {
     async generatePackage(
       config: ClientPackageConfig = defaultClientPackageConfig
     ) {
+      const start = Date.now();
+
       const normalizedConfig = normalizeClientPackageConfig(config);
       await generatePackage(normalizedConfig);
+
+      logger.info(
+        `\n🎁 Generated client package "${config.packageJson.name}" in ${(
+          (Date.now() - start) /
+          1000
+        ).toFixed(3)} s`
+      );
     },
   };
 }
