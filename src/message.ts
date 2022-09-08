@@ -10,7 +10,7 @@ export type Message =
 
 export interface InvocationMessage {
   type: "invocation";
-  id: string;
+  id: number;
   modulePath: string;
   functionName: string;
   data: string;
@@ -20,13 +20,13 @@ export type ResultMessage = ResultSuccessMessage | ResultErrorMessage;
 
 export interface ResultSuccessMessage {
   type: "result";
-  id: string;
+  id: number;
   data: string;
 }
 
 export interface ResultErrorMessage {
   type: "result";
-  id: string;
+  id: number;
   error: {
     name: string;
     message: string;
@@ -35,13 +35,13 @@ export interface ResultErrorMessage {
 
 export interface CallbackMessage {
   type: "callback";
-  id: string;
+  id: number;
   args: string;
 }
 
 export interface ErrorMessage {
   type: "error";
-  id: string;
+  id: number;
   error: {
     name: string;
     message: string;

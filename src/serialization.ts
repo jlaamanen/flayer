@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from "uuid";
 import { WebSocket } from "ws";
 import { Message } from "./message";
 import { sendMessage } from "./websocket/client";
@@ -24,13 +23,16 @@ function isSerialized(value: any) {
   );
 }
 
+// Sequential ID for identifying callback functions
+let callbackId = 0;
+
 /**
  * Starts a callback listener for "serialized" functions
  * @param ws WebSocket
  * @param fn Function
  */
 function startCallbackListener(ws: WebSocket, fn: Function) {
-  const id = uuidv4();
+  const id = callbackId++;
 
   const callback = async (event: MessageEvent) => {
     // Parse the message and ignore non-relevant messages

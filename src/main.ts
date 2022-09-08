@@ -25,17 +25,14 @@ export function createServer(modules: Modules) {
   registerModules(modules);
 
   logger.info(`\nFlayer modules:`);
-  Array.from(getModuleMap().entries())
-    .sort(([a], [b]) => a.localeCompare(b))
-    .forEach(([moduleName, module]) => {
-      console.log(`\n📦 "${moduleName}"`);
-      Object.keys(module)
-        .sort((a, b) => a.localeCompare(b))
-        .forEach((functionName, index, array) => {
-          const connector = index === array.length - 1 ? "└─" : "├─";
-          console.log(`${connector} 🟢 ${functionName}`);
-        });
+  // Log all modules and their functions
+  Array.from(getModuleMap().entries()).forEach(([moduleName, module]) => {
+    console.log(`\n📦 "${moduleName}"`);
+    Object.keys(module).forEach((functionName, index, array) => {
+      const connector = index === array.length - 1 ? "└─" : "├─";
+      console.log(`${connector} 🟢 ${functionName}`);
     });
+  });
 
   return {
     /**

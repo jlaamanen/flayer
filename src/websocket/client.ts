@@ -35,12 +35,12 @@ export async function sendMessage(ws: WebSocket, message: any) {
  * @param condition Condition
  * @param timeout Timeout in milliseconds
  */
-export async function waitForMessage(
+export function waitForMessage(
   ws: WebSocket,
   condition: { [key: string]: unknown },
   timeout?: number
 ) {
-  const a = await new Promise<string>((resolve, reject) => {
+  return new Promise<string>((resolve, reject) => {
     // Set a timeout if it was provided
     const timeoutHandle =
       timeout != null
@@ -84,7 +84,6 @@ export async function waitForMessage(
       reject(new FlayerError("Client disconnected"));
     });
   });
-  return a;
 }
 
 /**

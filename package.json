@@ -1,9 +1,13 @@
 {
   "name": "flayer",
-  "version": "0.0.0-alpha.10",
+  "version": "0.0.0-alpha.11",
   "description": "",
   "main": "dist/main.js",
   "types": "dist/main.d.ts",
+  "files": [
+    "client-lib",
+    "dist"
+  ],
   "scripts": {
     "test": "jest",
     "prepare": "npm run build",
@@ -23,7 +27,6 @@
     "@types/jest": "^27.0.2",
     "@types/node": "^16.10.3",
     "@types/uid-safe": "^2.1.2",
-    "@types/uuid": "^8.3.1",
     "@types/websocket": "^1.0.5",
     "@types/ws": "^8.2.0",
     "concurrently": "^7.3.0",
@@ -42,7 +45,6 @@
     "ts-morph": "^14.0.0",
     "type-fest": "^2.3.4",
     "uid-safe": "^2.1.5",
-    "uuid": "^8.3.2",
     "winston": "^3.3.3",
     "ws": "^8.8.0"
   }

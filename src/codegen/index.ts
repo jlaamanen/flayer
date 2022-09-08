@@ -1,8 +1,10 @@
 import {
   existsSync,
+  lstatSync,
   mkdirSync,
   readdirSync,
   readFileSync,
+  rmSync,
   writeFileSync,
 } from "fs";
 import { resolve } from "path";
@@ -13,12 +15,13 @@ import {
   TypeAliasDeclaration,
 } from "ts-morph";
 import { NormalizedClientPackageConfig } from "../config/client-package-config";
+import { FlayerError } from "../error";
 import { getModuleMap, Module } from "../modules";
 import { getProject, resolveFunction } from "../type-resolver";
 import { mergeSets } from "../utils";
 
 function generateJsFile(modulePath: string, functionNames: string[]) {
-  return `const { executeFlayerFunction } = require("flayer/dist/client-lib");
+  return `import { executeFlayerFunction } from "flayer/dist/client-lib";
 
 ${functionNames
   .map(
@@ -140,6 +143,10 @@ function generatePackageJson(config: NormalizedClientPackageConfig) {
       version: config.packageJson.version,
       main: "index.js",
       types: "index.d.ts",
+      scripts: {
+        // This script is needed for the package to install its own dependencies on local npm install
+        prepare: "npm install --ignore-scripts",
+      },
       dependencies: {
         flayer: config.flayerVersion,
       },
@@ -154,6 +161,27 @@ function generatePackageJson(config: NormalizedClientPackageConfig) {
  * @param config Client package configuration
  */
 export async function generatePackage(config: NormalizedClientPackageConfig) {
+  // Clean up the package
+  if (existsSync(config.path)) {
+    // Check if the path is a directory
+    if (lstatSync(config.path).isDirectory()) {
+      // Delete all directories except node_modules (= Flayer modules)
+      const directories = readdirSync(config.path, {
+        withFileTypes: true,
+      }).filter((file) => file.isDirectory);
+      for (const { name } of directories) {
+        if (name !== "node_modules") {
+          rmSync(resolve(config.path, name), { recursive: true, force: true });
+        }
+      }
+    } else {
+      // Destination is not a directory
+      throw new FlayerError(
+        `Configured client package path ${config.path} exists but is not a directory. Please remove the file and try again.`
+      );
+    }
+  }
+
   // Generate .d.ts & .js files for each module
   const files = await Promise.all(
     Array.from(getModuleMap().entries()).map(([modulePath, module]) =>
