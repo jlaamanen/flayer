@@ -40,7 +40,7 @@ describe("Type resolver", () => {
     const structure = getFunctionDeclarationStructure(node);
     const types = resolveTypeDeclarationsForFunctionNode(node);
 
-    expect(structure.returnType).toMatch(/Promise\<.*Foo\>/);
+    expect(structure.returnType).toMatch(/Promise\<Foo\[\]\>/);
     expect(structure.parameters).toEqual([]);
     expect(structure.typeParameters).toEqual([]);
 
