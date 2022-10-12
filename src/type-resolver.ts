@@ -313,30 +313,23 @@ export async function resolveFunction(fn: (...args: any[]) => any) {
   if (typeof fn !== "function") {
     throw new Error("Expected a function");
   }
-  console.log(fn.name, 1);
   const { path, line, column } = await locate(fn, { sourceMap: true });
-  console.log(fn.name, 2.5);
   const project = getProject();
-  console.log(fn.name, 2);
 
   // If the path wasn't included in files, add it to the project (e.g. .js files)
   const sourceFile =
     project.getSourceFile(path) ?? project.addSourceFileAtPath(path);
-  console.log(fn.name, 3);
   const position = getPosForLineAndColumn(sourceFile, line, column);
-  console.log(fn.name, 4);
   const node = getFunctionNode(sourceFile, position);
-  console.log(fn.name, 5);
+
   // Prepare & unify the function declaration for codegen
   const declarationStructure = getFunctionDeclarationStructure(node);
-  console.log(fn.name, 6);
+
   // Set the return type explicitly
   const returnType = node.getReturnType();
-  console.log(fn.name, 7);
   node.setReturnType(returnType.getText());
-  console.log(fn.name, 8);
   const typeDeclarations = resolveTypeDeclarationsForFunctionNode(node);
-  console.log(fn.name, 9);
+
   // Each function must have unique named types for now
   assertFunctionHasUniqueTypeNames(declarationStructure.name, typeDeclarations);
 
