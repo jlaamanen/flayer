@@ -27,10 +27,10 @@ export function createServer(modules: Modules) {
   logger.info(`\nFlayer modules:`);
   // Log all modules and their functions
   Array.from(getModuleMap().entries()).forEach(([moduleName, module]) => {
-    console.log(`\n📦 "${moduleName}"`);
+    logger.info(`\n📦 "${moduleName}"`);
     Object.keys(module).forEach((functionName, index, array) => {
       const connector = index === array.length - 1 ? "└─" : "├─";
-      console.log(`${connector} 🟢 ${functionName}`);
+      logger.info(`${connector} 🟢 ${functionName}`);
     });
   });
 

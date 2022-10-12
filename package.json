@@ -1,7 +1,17 @@
 {
   "name": "flayer",
-  "version": "0.0.0-alpha.11",
-  "description": "",
+  "version": "0.0.0-alpha.12",
+  "description": "Expose your server functions to be directly used by your frontend",
+  "keywords": [
+    "server",
+    "codegen"
+  ],
+  "author": "Joona Laamanen",
+  "license": "MIT",
+  "repository": "github:jlaamanen/flayer",
+  "bugs": {
+    "url": "https://github.com/jlaamanen/flayer/issues"
+  },
   "main": "dist/main.js",
   "types": "dist/main.d.ts",
   "files": [
@@ -18,9 +28,6 @@
     "watch:client-lib": "npm run build:client-lib -- --watch",
     "watch": "concurrently npm:watch:pkg npm:watch:client-lib"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "devDependencies": {
     "@types/cookie-signature": "^1.0.4",
     "@types/express-session": "^1.17.5",

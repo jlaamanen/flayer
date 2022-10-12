@@ -81,7 +81,8 @@ export function waitForMessage(
     // If connection is closed, remove the callback & reject the promise
     ws.addEventListener("close", () => {
       ws.removeEventListener("message", messageCallback);
-      reject(new FlayerError("Client disconnected"));
+      // TODO: Reconsider if this is needed here - it may crash the server if errors are not handled properly in all callbacks
+      // reject(new FlayerError("Client disconnected"));
     });
   });
 }

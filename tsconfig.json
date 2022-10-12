@@ -5,6 +5,6 @@
     "declaration": true,
     "esModuleInterop": true
   },
-  "include": ["src/**/*", "client-src"],
-  "exclude": ["*.spec.ts", "src/client"]
+  "include": ["src/**/*"],
+  "exclude": ["*.spec.ts", "src/client-lib"]
 }

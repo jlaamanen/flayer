@@ -4,9 +4,7 @@
 >
 > This library is experimental and should be used with caution.
 
-Make interactions between your TypeScript frontend and Node.js backend seamless: invoke your backend functions directly from your frontend.
-
-No more manual serialization or wrapping & unwrapping the data on the server or the client. Just use the functions as they were written in the first place.
+Flayer (short for _function layer_) is a Node.js library, which allows you to "expose" your TypeScript functions to be directly used by your TypeScript frontend with minimal setup and boilerplate.
 
 ## Quick start
 

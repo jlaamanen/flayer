@@ -1,6 +1,6 @@
 import { WebSocket } from "ws";
 import { Message } from "./message";
-import { sendMessage } from "./websocket/client";
+import { sendMessage, waitForMessage } from "./websocket/client";
 
 export const typeMarkers = {
   date: "@Date",
@@ -43,7 +43,16 @@ function startCallbackListener(ws: WebSocket, fn: Function) {
 
     // Matching message found - deserialize args and invoke the callback function
     const args = deserialize(message.args, ws);
-    await fn(...args);
+    const result = await fn(...args);
+
+    // Send the data back returned from the callback
+    ws.send(
+      JSON.stringify({
+        type: "callback",
+        id,
+        data: serialize(result, ws),
+      })
+    );
   };
 
   // Assign the callback as a WebSocket event listener
@@ -136,8 +145,9 @@ export function serialize(object: any, ws: WebSocket): string {
  * @returns Deserialized object
  */
 export function deserialize(json: string, ws: WebSocket) {
-  if (json == null) {
-    return null;
+  // Any falsy value -> return the value as-is (null, undefined, false, 0...)
+  if (!json) {
+    return json;
   }
   try {
     return JSON.parse(json, (key, value) => {
@@ -159,13 +169,19 @@ export function deserialize(json: string, ws: WebSocket) {
         case typeMarkers.bigInt:
           return BigInt(serializedValue);
         case typeMarkers.function:
-          const fn = (...args: any[]) => {
+          const fn = async (...args: any[]) => {
             const functionId = serializedValue;
             sendMessage(ws, {
               type: "callback",
               id: functionId,
               args: serialize(args, ws),
             });
+            // Wait for callback result from the other side
+            const result = await waitForMessage(ws, {
+              type: "callback",
+              id: functionId,
+            });
+            return deserialize(result, ws);
           };
           // Override function name with the key
           Object.defineProperty(fn, "name", { value: key, writable: false });

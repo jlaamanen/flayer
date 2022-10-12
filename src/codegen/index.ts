@@ -17,11 +17,15 @@ import {
 import { NormalizedClientPackageConfig } from "../config/client-package-config";
 import { FlayerError } from "../error";
 import { getModuleMap, Module } from "../modules";
-import { getProject, resolveFunction } from "../type-resolver";
+import {
+  assertModuleHasUniqueTypeNames,
+  getProject,
+  resolveFunction,
+} from "../type-resolver";
 import { mergeSets } from "../utils";
 
 function generateJsFile(modulePath: string, functionNames: string[]) {
-  return `import { executeFlayerFunction } from "flayer/dist/client-lib";
+  return `import { executeFlayerFunction } from "flayer/client-lib";
 
 ${functionNames
   .map(
@@ -38,7 +42,6 @@ ${functionNames
  * @returns Generated source files
  */
 async function generateSourceFiles(modulePath: string, module: Module) {
-  const start = Date.now();
   // Resolve each function into types and function declarations
   const resolvedFunctions = await Promise.all(
     Object.values(module).map(resolveFunction)
@@ -55,8 +58,7 @@ async function generateSourceFiles(modulePath: string, module: Module) {
   );
 
   // Assert that the module only has unique type names
-  // TODO type Set doesn't always work! (the same declaration may appear there multiple times)
-  // assertModuleHasUniqueTypeNames(modulePath, types);
+  assertModuleHasUniqueTypeNames(modulePath, types);
 
   const project = getProject();
 
@@ -115,7 +117,7 @@ export async function generateModuleIndex(
 
   moduleDeclaration.addExportDeclaration({
     namedExports: ["configure", "disconnect"],
-    moduleSpecifier: "flayer/dist/client-lib",
+    moduleSpecifier: "flayer/client-lib",
   });
 
   // Read the pre-built lib files
@@ -184,9 +186,9 @@ export async function generatePackage(config: NormalizedClientPackageConfig) {
 
   // Generate .d.ts & .js files for each module
   const files = await Promise.all(
-    Array.from(getModuleMap().entries()).map(([modulePath, module]) =>
-      generateSourceFiles(modulePath, module)
-    )
+    Array.from(getModuleMap().entries()).map(([modulePath, module]) => {
+      return generateSourceFiles(modulePath, module);
+    })
   );
 
   files.forEach((file) => {

@@ -65,7 +65,7 @@ export function getProject(options: ProjectOptions = {}) {
   if (!project) {
     const service = process[require("ts-node").REGISTER_INSTANCE] as Service;
     project = new Project({
-      tsConfigFilePath: (service as any).configFilePath,
+      tsConfigFilePath: (service as any)?.configFilePath,
       ...(options ?? {}),
     });
   }
@@ -76,7 +76,7 @@ export function getProject(options: ProjectOptions = {}) {
  * Gets an InterfaceDeclaration or a TypeAliasDeclaration for the given type
  * if the type is "custom".
  *
- * Returns null for primitive or built-in/ambient types.
+ * Returns null for primitive or built-in types.
  *
  * @param type Type
  * @returns Type declaration
@@ -87,28 +87,24 @@ function getCustomTypeDeclaration(type: Type) {
     // Primitive types don't have a symbol
     return null;
   }
+
   return (
-    symbol
-      .getDeclarations()
-      .find(
-        (
-          declaration
-        ): declaration is InterfaceDeclaration | TypeAliasDeclaration =>
-          !(declaration.getFlags() & NodeFlagAmbient) &&
-          [
-            SyntaxKind.InterfaceDeclaration,
-            SyntaxKind.TypeAliasDeclaration,
-          ].includes(declaration.getKind())
-      ) ?? null
+    symbol.getDeclarations().find(
+      (
+        declaration
+      ): declaration is InterfaceDeclaration | TypeAliasDeclaration =>
+        // Only pick ambient types (.d.ts) if they're inside the project
+        (!(declaration.getFlags() & NodeFlagAmbient) ||
+          (declaration.getSourceFile() as any)._inProject) &&
+        [
+          SyntaxKind.InterfaceDeclaration,
+          SyntaxKind.TypeAliasDeclaration,
+        ].includes(declaration.getKind())
+    ) ?? null
   );
 }
 
-/**
- * Gets all "custom" types under the given node.
- * @param node Node
- * @returns Custom types used in the node
- */
-function getCustomTypeDeclarationsInNode(node: Node) {
+function getCustomTypesInNode(node: Node) {
   const types = new Set<Type>();
   node.forEachDescendant((descendant) => {
     if (descendant.getSymbol() === node.getSymbol()) {
@@ -121,22 +117,59 @@ function getCustomTypeDeclarationsInNode(node: Node) {
       types.add(descendant.getReturnType());
     }
   });
-  return Array.from<Type>(types).map(getCustomTypeDeclaration).filter(Boolean);
+  return Array.from(types);
 }
 
-function recursivelyGetTypeDeclarationsInNode(
-  node: Node,
+function resolveTypeDeclarationsForTypes(
+  types: Type[],
   typeDeclarations = new Set<InterfaceDeclaration | TypeAliasDeclaration>()
 ) {
-  const declarations = getCustomTypeDeclarationsInNode(node);
-  declarations.forEach((declaration) => {
-    if (typeDeclarations.has(declaration)) {
-      return;
+  for (const type of types) {
+    // const debug = type.getText().includes("import");
+    const declarations = [
+      getCustomTypeDeclaration(type),
+      ...type.getTypeArguments().map(getCustomTypeDeclaration),
+    ].filter(
+      (declaration) => declaration && !typeDeclarations.has(declaration)
+    );
+
+    if (!declarations.length) {
+      continue;
     }
-    typeDeclarations.add(declaration);
-    recursivelyGetTypeDeclarationsInNode(declaration, typeDeclarations);
-  });
+
+    const subTypes = declarations.reduce((subTypes, declaration) => {
+      // Add the declaration to the set as well
+      typeDeclarations.add(declaration);
+      return [...subTypes, ...getCustomTypesInNode(declaration)];
+    }, [] as Type[]);
+
+    // const subTypes = getCustomTypesInNode(declaration);
+    typeDeclarations = resolveTypeDeclarationsForTypes(
+      subTypes,
+      typeDeclarations
+    );
+  }
+
   return typeDeclarations;
+}
+
+export function resolveTypeDeclarationsForFunctionNode(node: FunctionNode) {
+  const signature = node.getSignature();
+  const types = [
+    ...signature
+      .getParameters()
+      .reduce(
+        (types, parameter) => [
+          ...types,
+          ...parameter.getDeclarations().map((d) => d.getType()),
+        ],
+        [] as Type[]
+      ),
+    signature.getReturnType(),
+    ...signature.getTypeParameters(),
+  ];
+
+  return resolveTypeDeclarationsForTypes(types);
 }
 
 function promisifyTypeAsText(type: string) {
@@ -188,7 +221,7 @@ function getJsDocs(node: FunctionNode) {
   }
 }
 
-function getFunctionDeclarationStructure(
+export function getFunctionDeclarationStructure(
   node: FunctionNode
 ): OptionalKind<FunctionDeclarationStructure> {
   // Try to get function name from the node first - otherwise it should be in the parent
@@ -207,7 +240,7 @@ function getFunctionDeclarationStructure(
     // If some imported type is returned, get the text via node to get rid of "import" types -
     // otherwise it should be a primitive type
     returnType =
-      node.getReturnTypeNode()?.getText() ?? node.getReturnType().getText();
+      node.getReturnTypeNode()?.getText() ?? node.getReturnType().getText(node);
   } catch (error) {
     // For JS files getReturnType seems to throw an error - just fallback to `any` in this case
     returnType = "any";
@@ -236,7 +269,6 @@ function getDuplicateTypeNames(
   const uniqueNames = Array.from(
     new Set(Array.from(types).map((type) => type.getSymbol().getName()))
   );
-  // TODO Set doesn't always seem to work - the same declaration may appear there multiple times
   return uniqueNames.filter(
     (name) =>
       Array.from(types).filter((type) => name === type.getSymbol().getName())
@@ -281,20 +313,30 @@ export async function resolveFunction(fn: (...args: any[]) => any) {
   if (typeof fn !== "function") {
     throw new Error("Expected a function");
   }
-
+  console.log(fn.name, 1);
   const { path, line, column } = await locate(fn, { sourceMap: true });
+  console.log(fn.name, 2.5);
   const project = getProject();
+  console.log(fn.name, 2);
+
   // If the path wasn't included in files, add it to the project (e.g. .js files)
   const sourceFile =
     project.getSourceFile(path) ?? project.addSourceFileAtPath(path);
+  console.log(fn.name, 3);
   const position = getPosForLineAndColumn(sourceFile, line, column);
+  console.log(fn.name, 4);
   const node = getFunctionNode(sourceFile, position);
-
+  console.log(fn.name, 5);
   // Prepare & unify the function declaration for codegen
   const declarationStructure = getFunctionDeclarationStructure(node);
-  // Get all referenced types in a set
-  const typeDeclarations = recursivelyGetTypeDeclarationsInNode(node);
-
+  console.log(fn.name, 6);
+  // Set the return type explicitly
+  const returnType = node.getReturnType();
+  console.log(fn.name, 7);
+  node.setReturnType(returnType.getText());
+  console.log(fn.name, 8);
+  const typeDeclarations = resolveTypeDeclarationsForFunctionNode(node);
+  console.log(fn.name, 9);
   // Each function must have unique named types for now
   assertFunctionHasUniqueTypeNames(declarationStructure.name, typeDeclarations);
 
