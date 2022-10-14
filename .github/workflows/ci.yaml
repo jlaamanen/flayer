@@ -57,7 +57,7 @@ jobs:
       # Publish the package
       - run: npm publish
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       # After a successful publish, commit the new version to the repository (will not trigger new workflows!)
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
