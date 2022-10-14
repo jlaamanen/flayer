@@ -1,0 +1,36 @@
+name-template: "v$RESOLVED_VERSION"
+tag-template: "v$RESOLVED_VERSION"
+categories:
+  - title: "🚀 Features"
+    label: "feature"
+  - title: "🐛 Bug fixes"
+    label: "fix"
+  - title: "🧰 Maintenance"
+    label: "chore"
+autolabeler:
+  - label: "feature"
+    branch:
+      - '/feature\/.+/'
+  - label: "fix"
+    branch:
+      - '/fix\/.+/'
+  - label: "chore"
+    branch:
+      - '/chore\/.+/'
+version-resolver:
+  major:
+    labels:
+      - "major"
+  minor:
+    labels:
+      - "minor"
+      - "feature"
+  patch:
+    labels:
+      - "patch"
+      - "fix"
+  default: patch
+template: |
+  ## Changes
+
+  $CHANGES

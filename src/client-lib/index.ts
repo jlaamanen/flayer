@@ -4,6 +4,10 @@ import { FlayerConnectionError, FlayerError } from "../error";
 import { deserialize, serialize } from "../serialization";
 import { connect, sendMessage, waitForMessage } from "../websocket/client";
 
+/**
+ * For internal use only - strip these declarations from generated declarations
+ * @internal
+ */
 declare global {
   interface Window {
     flayer: {
@@ -32,6 +36,10 @@ function set<Key extends keyof typeof window["flayer"]>(
   window.flayer[key] = value;
 }
 
+/**
+ * For internal use only - strip this function from generated declarations
+ * @internal
+ */
 export async function executeFlayerFunction(
   modulePath: string,
   functionName: string,

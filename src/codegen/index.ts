@@ -117,7 +117,8 @@ export async function generateModuleIndex(
 
   moduleDeclaration.addExportDeclaration({
     namedExports: ["configure", "disconnect"],
-    moduleSpecifier: "flayer/client-lib",
+    // The actual types must be referred to under 'dist' instead of the bundle directory
+    moduleSpecifier: "flayer/dist/client-lib",
   });
 
   // Read the pre-built lib files

@@ -6,5 +6,5 @@
     "esModuleInterop": true
   },
   "include": ["src/**/*"],
-  "exclude": ["*.spec.ts", "src/client-lib"]
+  "exclude": ["*.spec.ts"]
 }
