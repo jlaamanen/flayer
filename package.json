@@ -20,7 +20,6 @@
   ],
   "scripts": {
     "test": "jest",
-    "prepare": "npm run build",
     "build:pkg": "tsc",
     "build:client-lib": "esbuild --bundle src/client-lib/index.ts --outdir=client-lib --minify --sourcemap --splitting --format=esm --target=esnext",
     "build": "npm run build:pkg && npm run build:client-lib",
