@@ -1,6 +1,6 @@
 {
   "name": "flayer",
-  "version": "0.0.0-alpha.14",
+  "version": "0.0.0-alpha.15",
   "description": "Expose your server functions to be directly used by your frontend",
   "keywords": [
     "server",
