@@ -23,10 +23,12 @@ export { onDisconnect } from "./websocket/server";
 export function createServer(modules: Modules) {
   registerModules(modules);
 
-  logger.info(`\nFlayer modules:`);
+  logger.info("");
+  logger.info(`Flayer modules:`);
   // Log all modules and their functions
   Array.from(getModuleMap().entries()).forEach(([moduleName, module]) => {
-    logger.info(`\n📦 "${moduleName}"`);
+    logger.info("");
+    logger.info(`📦 "${moduleName}"`);
     Object.keys(module).forEach((functionName, index, array) => {
       const connector = index === array.length - 1 ? "└─" : "├─";
       logger.info(`${connector} 🟢 ${functionName}`);
@@ -63,8 +65,9 @@ export function createServer(modules: Modules) {
       const normalizedConfig = normalizeClientPackageConfig(config);
       await generatePackage(normalizedConfig);
 
+      logger.info("");
       logger.info(
-        `\n🎁 Generated client package "${
+        `🎁 Generated client package "${
           normalizedConfig.packageJson.name
         }" in ${((Date.now() - start) / 1000).toFixed(3)} s`
       );

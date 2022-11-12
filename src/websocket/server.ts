@@ -49,7 +49,8 @@ export function startWebSocketServer(config: NormalizedServerConfig) {
     });
   });
 
-  logger.info(`\nFlayer started on port ${port}`);
+  logger.info("");
+  logger.info(`Flayer started on port ${port}`);
 }
 
 /**

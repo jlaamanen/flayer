@@ -139,34 +139,24 @@ function assertStoreIsDefined() {
 }
 
 /**
- * Tries to get the current session ID from async local storage.
- *
- * If not found, throws an error.
- * @returns Session ID for the current connection
- */
-function getSessionIdFromAsyncStore() {
-  const sessionId = getSessionId();
-  if (sessionId == null) {
-    throw new FlayerError("Session ID not found for the current connection");
-  }
-  return sessionId;
-}
-
-/**
  * Get current session object.
  * @returns Session
  */
 export async function getSession() {
   return new Promise<Session | null>((resolve, reject) => {
     assertStoreIsDefined();
-    store!.get(getSessionIdFromAsyncStore(), (error, session) => {
+    const sessionId = getSessionId();
+    if (!sessionId) {
+      resolve(null);
+      return;
+    }
+    store!.get(sessionId, (error, session) => {
       if (error) {
         return reject(error);
       }
       resolve(session ?? null);
     });
   });
-  // return promisify(new MemoryStore().get)(getSessionId()) as Session;
 }
 
 /**
@@ -176,7 +166,12 @@ export async function getSession() {
 export async function setSession(session: Session) {
   return new Promise<void>((resolve, reject) => {
     assertStoreIsDefined();
-    store!.set(getSessionIdFromAsyncStore(), session as any, (error) => {
+    const sessionId = getSessionId();
+    if (!sessionId) {
+      reject(new FlayerError("Cannot set to session - session ID not found"));
+      return;
+    }
+    store!.set(sessionId, session as any, (error) => {
       if (error) {
         return reject(error);
       }
@@ -191,7 +186,12 @@ export async function setSession(session: Session) {
 export async function destroySession() {
   return new Promise<void>((resolve, reject) => {
     assertStoreIsDefined();
-    store!.destroy(getSessionIdFromAsyncStore(), (error) => {
+    const sessionId = getSessionId();
+    if (!sessionId) {
+      // Session not found, so it shouldn't exist
+      return;
+    }
+    store!.destroy(sessionId, (error) => {
       if (error) {
         return reject(error);
       }
