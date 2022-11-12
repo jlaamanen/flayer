@@ -1,5 +1,7 @@
 # Flayer
 
+[![npm version](https://badge.fury.io/js/flayer.svg)](https://badge.fury.io/js/flayer)
+
 > **Warning!** ⚠️
 >
 > This library is experimental and should be used with caution.
