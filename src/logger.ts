@@ -14,8 +14,8 @@ const winstonLogger = createLogger?.({
  * Uses Winston if found, otherwise uses console.
  */
 export const logger = {
-  debug: winstonLogger?.debug ?? console.log,
-  info: winstonLogger?.info ?? console.log,
-  warn: winstonLogger?.warn ?? console.log,
-  error: winstonLogger?.error ?? console.error,
+  debug: winstonLogger?.debug.bind(winstonLogger) ?? console.log,
+  info: winstonLogger?.info.bind(winstonLogger) ?? console.log,
+  warn: winstonLogger?.warn.bind(winstonLogger) ?? console.log,
+  error: winstonLogger?.error.bind(winstonLogger) ?? console.error,
 };
