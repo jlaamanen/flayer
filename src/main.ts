@@ -2,10 +2,9 @@ import { MemoryStore } from "express-session";
 import { generatePackage } from "./codegen";
 import {
   ClientPackageConfig,
-  defaultClientPackageConfig,
   normalizeClientPackageConfig,
 } from "./config/client-package-config";
-import { defaultServerConfig, ServerConfig } from "./config/server-config";
+import { normalizeServerConfig, ServerConfig } from "./config/server-config";
 import { FlayerError } from "./error";
 import { logger } from "./logger";
 import { getModuleMap, Modules, registerModules } from "./modules";
@@ -39,37 +38,35 @@ export function createServer(modules: Modules) {
      * Starts the Flayer server.
      * @param config Flayer server configuration
      */
-    async start(config: ServerConfig = defaultServerConfig) {
+    async start(config?: ServerConfig) {
+      const normalizedConfig = normalizeServerConfig(config);
       // Validate session configuration if it exists
-      if (config.session) {
-        if (!config.session.secret) {
+      if (normalizedConfig.session) {
+        if (!normalizedConfig.session.secret) {
           throw new FlayerError("Session secret not defined");
         }
-        if (!config.session.store) {
+        if (!normalizedConfig.session.store) {
           // Use memory store by default, if store is not defined
-          setSessionStore(config.session.store ?? new MemoryStore());
+          setSessionStore(normalizedConfig.session.store ?? new MemoryStore());
         }
       }
 
-      startWebSocketServer(config);
+      startWebSocketServer(normalizedConfig);
     },
     /**
      * Generates client-side package for invoking Flayer functions.
      * @param config Client package configuration
      */
-    async generatePackage(
-      config: ClientPackageConfig = defaultClientPackageConfig
-    ) {
+    async generatePackage(config?: ClientPackageConfig) {
       const start = Date.now();
 
       const normalizedConfig = normalizeClientPackageConfig(config);
       await generatePackage(normalizedConfig);
 
       logger.info(
-        `\n🎁 Generated client package "${config.packageJson.name}" in ${(
-          (Date.now() - start) /
-          1000
-        ).toFixed(3)} s`
+        `\n🎁 Generated client package "${
+          normalizedConfig.packageJson.name
+        }" in ${((Date.now() - start) / 1000).toFixed(3)} s`
       );
     },
   };

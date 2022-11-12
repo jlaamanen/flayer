@@ -60,7 +60,9 @@ export function waitForMessage(
           return;
         }
         // A message matching the condition was received
-        clearTimeout(timeoutHandle);
+        if (timeoutHandle != null) {
+          clearTimeout(timeoutHandle);
+        }
         if (jsonMessage.error) {
           const SpecifiedError =
             jsonMessage.error.name === "FlayerError" ? FlayerError : Error;

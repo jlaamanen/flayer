@@ -131,7 +131,9 @@ export function serialize(object: any, ws: WebSocket): string {
     });
     return json;
   } catch (error) {
-    throw new SerialiationError(error.message);
+    throw new SerialiationError(
+      error instanceof Error ? error.message : "Unknown error"
+    );
   }
 }
 
@@ -144,7 +146,7 @@ export function serialize(object: any, ws: WebSocket): string {
  * @param ws WebSocket
  * @returns Deserialized object
  */
-export function deserialize(json: string, ws: WebSocket) {
+export function deserialize(json: string, ws: WebSocket): any {
   // Any falsy value -> return the value as-is (null, undefined, false, 0...)
   if (!json) {
     return json;
@@ -204,7 +206,9 @@ export function deserialize(json: string, ws: WebSocket) {
     });
   } catch (error) {
     console.error(error);
-    throw new Error("serialization_error");
+    throw new SerialiationError(
+      error instanceof Error ? error.message : "Unknown error"
+    );
   }
 }
 

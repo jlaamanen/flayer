@@ -1,7 +1,6 @@
 import { createLogger, format, transports } from "winston";
 
-const winstonLogger = null;
-createLogger?.({
+const winstonLogger = createLogger?.({
   level: process.env.FLAYER_LOG_LEVEL ?? "info",
   transports: [
     new transports.Console({

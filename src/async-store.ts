@@ -12,7 +12,7 @@ interface AsyncStore {
   /**
    * Session ID
    */
-  sessionId: string;
+  sessionId: string | null;
 }
 
 /**

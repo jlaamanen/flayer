@@ -14,7 +14,10 @@ import {
   SyntaxKind,
   TypeAliasDeclaration,
 } from "ts-morph";
-import { NormalizedClientPackageConfig } from "../config/client-package-config";
+import {
+  ClientPackageConfig,
+  NormalizedClientPackageConfig,
+} from "../config/client-package-config";
 import { FlayerError } from "../error";
 import { getModuleMap, Module } from "../modules";
 import {
@@ -139,11 +142,11 @@ export async function generateModuleIndex(
  * @param config Client package config
  * @returns Package.json contents
  */
-function generatePackageJson(config: NormalizedClientPackageConfig) {
+function generatePackageJson(config: ClientPackageConfig) {
   return JSON.stringify(
     {
-      name: config.packageJson.name,
-      version: config.packageJson.version,
+      name: config.packageJson?.name,
+      version: config.packageJson?.version,
       main: "index.js",
       types: "index.d.ts",
       scripts: {

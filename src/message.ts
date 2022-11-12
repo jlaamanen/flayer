@@ -28,8 +28,8 @@ export interface ResultErrorMessage {
   type: "result";
   id: number;
   error: {
-    name: string;
-    message: string;
+    name?: string;
+    message?: string;
   };
 }
 
@@ -80,7 +80,7 @@ export async function handleInvocationMessage(
 
   // Function was found - proceed with argument deserialization
   const args = deserialize(message.data, ws);
-  let resultMessage: ResultMessage = null;
+  let resultMessage: ResultMessage | null = null;
   try {
     // Try to execute the function
     const result = await fn(...args);
@@ -100,8 +100,8 @@ export async function handleInvocationMessage(
       type: "result",
       id: message.id,
       error: {
-        name: error.constructor.name,
-        message: error.message,
+        name: error?.constructor?.name,
+        message: error instanceof Error ? error?.message : undefined,
       },
     };
   }

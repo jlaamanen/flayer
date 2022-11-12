@@ -17,6 +17,7 @@ import {
   TypeAliasDeclaration,
 } from "ts-morph";
 import { Service } from "ts-node";
+import { FlayerError } from "./error";
 
 export interface ResolvedFunction {
   declarationStructure: FunctionDeclarationStructure;
@@ -26,7 +27,7 @@ export interface ResolvedFunction {
 const NodeFlagAmbient = 8388608;
 
 // Cache the project for performance
-let project: Project = null;
+let project: Project | null = null;
 
 type FunctionNode =
   | FunctionDeclaration
@@ -63,7 +64,9 @@ function getFunctionNode(sourceFile: SourceFile, position: number) {
 export function getProject(options: ProjectOptions = {}) {
   // If project is not found in cache, create one
   if (!project) {
-    const service = process[require("ts-node").REGISTER_INSTANCE] as Service;
+    const service = process[
+      require("ts-node").REGISTER_INSTANCE as keyof typeof process
+    ] as Service;
     project = new Project({
       tsConfigFilePath: (service as any)?.configFilePath,
       ...(options ?? {}),
@@ -138,6 +141,9 @@ function resolveTypeDeclarationsForTypes(
     }
 
     const subTypes = declarations.reduce((subTypes, declaration) => {
+      if (!declaration) {
+        return subTypes;
+      }
       // Add the declaration to the set as well
       typeDeclarations.add(declaration);
       return [...subTypes, ...getCustomTypesInNode(declaration)];
@@ -191,7 +197,7 @@ function getJsDocs(node: FunctionNode) {
     return (
       node
         .getParentIfKind(SyntaxKind.VariableDeclaration)
-        .getParentIfKind(SyntaxKind.VariableDeclarationList)
+        ?.getParentIfKind(SyntaxKind.VariableDeclarationList)
         ?.getParentIfKind(SyntaxKind.VariableStatement)
         ?.getJsDocs()
         ?.map((docs) => docs.getStructure()) ?? []
@@ -201,10 +207,10 @@ function getJsDocs(node: FunctionNode) {
   if (node.getParentIfKind(SyntaxKind.PropertyAssignment)) {
     // TODO: ts-morph doesn't think PropertyAssignment is JSDocable, so we're abusing the internal functions here!
     const parentNode = node.getParentIfKind(SyntaxKind.PropertyAssignment);
-    const jsDocsNodes = (parentNode.compilerNode as any).jsDoc;
+    const jsDocsNodes: Node[] = (parentNode?.compilerNode as any).jsDoc;
     return (
       jsDocsNodes?.map((node) =>
-        parentNode["_getNodeFromCompilerNode"](node)
+        (parentNode as any)["_getNodeFromCompilerNode" as any](node)
       ) as JSDoc[]
     )?.map((docs) => docs.getStructure());
   }
@@ -215,9 +221,9 @@ function getJsDocs(node: FunctionNode) {
       ?.getParentIfKind(SyntaxKind.ExpressionStatement)
   ) {
     const parentNode = node
-      .getParentIfKind(SyntaxKind.BinaryExpression)
-      .getParentIfKind(SyntaxKind.ExpressionStatement);
-    return parentNode.getJsDocs()?.map((docs) => docs.getStructure()) ?? [];
+      ?.getParentIfKind(SyntaxKind.BinaryExpression)
+      ?.getParentIfKind(SyntaxKind.ExpressionStatement);
+    return parentNode?.getJsDocs()?.map((docs) => docs.getStructure()) ?? [];
   }
 }
 
@@ -235,7 +241,7 @@ export function getFunctionDeclarationStructure(
     throw new Error("Could not deduce name for a function");
   }
 
-  let returnType: string = null;
+  let returnType: string | null = null;
   try {
     // If some imported type is returned, get the text via node to get rid of "import" types -
     // otherwise it should be a primitive type
@@ -267,11 +273,11 @@ function getDuplicateTypeNames(
   types: Set<InterfaceDeclaration | TypeAliasDeclaration>
 ) {
   const uniqueNames = Array.from(
-    new Set(Array.from(types).map((type) => type.getSymbol().getName()))
+    new Set(Array.from(types).map((type) => type.getSymbol()?.getName()))
   );
   return uniqueNames.filter(
     (name) =>
-      Array.from(types).filter((type) => name === type.getSymbol().getName())
+      Array.from(types).filter((type) => name === type.getSymbol()?.getName())
         .length !== 1
   );
 }
@@ -322,8 +328,15 @@ export async function resolveFunction(fn: (...args: any[]) => any) {
   const position = getPosForLineAndColumn(sourceFile, line, column);
   const node = getFunctionNode(sourceFile, position);
 
+  if (!node) {
+    throw new FlayerError("Could not find function node");
+  }
   // Prepare & unify the function declaration for codegen
   const declarationStructure = getFunctionDeclarationStructure(node);
+
+  if (!declarationStructure.name) {
+    throw new FlayerError("Function declaration is unnamed");
+  }
 
   // Set the return type explicitly
   const returnType = node.getReturnType();

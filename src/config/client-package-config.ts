@@ -1,78 +1,59 @@
-import { PartialDeep } from "type-fest";
+import { DeepRequired } from "../utils";
 
 /**
- * Normalized client package configuration.
- *
- * For internal use.
+ * Flayer client package configuration.
  */
-export interface NormalizedClientPackageConfig {
+export interface ClientPackageConfig {
   /**
    * Path of the generated client package.
    *
    * @default "./.flayer"
    */
-  path: string;
+  path?: string;
   /**
    * Flayer version to use in the generated client package
    *
    * @default Currently installed Flayer version
    */
-  flayerVersion: string;
+  flayerVersion?: string;
   /**
    * Generated package.json overrides.
    */
-  packageJson: {
+  packageJson?: {
     /**
      * Package name
      */
-    name: string;
+    name?: string;
     /**
      * Package version
      */
-    version: string;
+    version?: string;
   };
 }
 
 /**
- * Flayer client configuration.
+ * Client package config with all fields filled.
+ *
+ * For internal use only.
  */
-export type ClientPackageConfig = PartialDeep<NormalizedClientPackageConfig>;
-
-export const defaultClientPackageConfig: NormalizedClientPackageConfig = {
-  path: "./.flayer",
-  // Get current package version from package.json
-  flayerVersion: require("../../package.json").version,
-  packageJson: {
-    name: "server-pkg",
-    version: "0.0.1",
-  },
-};
+export type NormalizedClientPackageConfig = DeepRequired<ClientPackageConfig>;
 
 /**
- * Normalizes given partial client configuration.
- *
- * Fills the values with the following order:
- * 1. environment
- * 2. configuration given as an argument
- * 3. default values
- * @param config Partial client configuration
- * @returns Normalized client configuration
+ * Fills user-given client package config with default values unless provided.
+ * @param config User-given config
+ * @returns Normalized config
  */
 export function normalizeClientPackageConfig(
-  config: ClientPackageConfig
+  config: ClientPackageConfig | undefined
 ): NormalizedClientPackageConfig {
   return {
-    path:
-      process.env.FLAYER_CLIENT_PATH ??
-      config.path ??
-      defaultClientPackageConfig.path,
+    path: config?.path ?? "./.flayer",
+    // Get current package version from package.json
     flayerVersion:
-      process.env.FLAYER_CLIENT_FLAYER_VERSION ??
-      config.flayerVersion ??
-      defaultClientPackageConfig.flayerVersion,
+      config?.flayerVersion ?? require("../../package.json").version,
     packageJson: {
-      ...defaultClientPackageConfig.packageJson,
-      ...config.packageJson,
+      name: config?.packageJson?.name ?? "server-pkg",
+      version: config?.packageJson?.version ?? "0.0.1",
     },
   };
 }

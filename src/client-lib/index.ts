@@ -12,8 +12,8 @@ declare global {
   interface Window {
     flayer: {
       invocationId: number;
-      ws: WebSocket;
-      config: ClientConfig;
+      ws: WebSocket | null;
+      config: ClientConfig | null;
     };
   }
 }
@@ -93,6 +93,6 @@ export async function configure(config: ClientConfig) {
  */
 export async function disconnect() {
   const ws = get("ws");
-  ws.close();
+  ws?.close();
   set("ws", null);
 }

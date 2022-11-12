@@ -27,12 +27,17 @@ export function mergeSets<T, U>(a: Set<T>, b: Set<U>) {
  * @param values
  * @returns
  */
-export function collapse(
-  strings: TemplateStringsArray,
-  ...values: any[]
-): string {
+export function collapse(strings: TemplateStringsArray, ...values: any[]) {
   if (values.some((value) => value == null)) {
     return null;
   }
   return strings.map((str, index) => `${str}${values[index] ?? ""}`).join("");
 }
+
+/**
+ * Utility type for making a config object normalized,
+ * i.e. an object that is filled with default values unless overridden.
+ */
+export type DeepRequired<T> = Required<{
+  [key in keyof T]: DeepRequired<T[key]>;
+}>;

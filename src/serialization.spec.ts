@@ -1,4 +1,8 @@
+import { WebSocket } from "ws";
 import { deserialize, SerialiationError, serialize } from "./serialization";
+
+// Mock WebSocket, but with correct type enforced
+const mockWs: WebSocket = null as any;
 
 describe("Serialization", () => {
   describe("with basic values", () => {
@@ -20,8 +24,8 @@ describe("Serialization", () => {
         minusInfinity: -Infinity,
         empty: null,
       };
-      const serialized = serialize(original, null);
-      const deserialized = deserialize(serialized, null);
+      const serialized = serialize(original, mockWs);
+      const deserialized = deserialize(serialized, mockWs);
 
       expect(deserialized).toEqual(original);
     });
@@ -51,8 +55,8 @@ describe("Serialization", () => {
           },
         },
       };
-      const serialized = serialize(original, null);
-      const deserialized = deserialize(serialized, null);
+      const serialized = serialize(original, mockWs);
+      const deserialized = deserialize(serialized, mockWs);
 
       expect(deserialized).toEqual(original);
     });
@@ -70,16 +74,16 @@ describe("Serialization", () => {
         Infinity,
         -Infinity,
       ];
-      const serialized = serialize(original, null);
-      const deserialized = deserialize(serialized, null);
+      const serialized = serialize(original, mockWs);
+      const deserialized = deserialize(serialized, mockWs);
 
       expect(deserialized).toEqual(original);
     });
 
     test("should handle top-level sets", () => {
       const original = new Set([1, 2, 3, 4, [new Date()]]);
-      const serialized = serialize(original, null);
-      const deserialized = deserialize(serialized, null);
+      const serialized = serialize(original, mockWs);
+      const deserialized = deserialize(serialized, mockWs);
 
       expect(deserialized).toEqual(original);
     });
@@ -90,8 +94,8 @@ describe("Serialization", () => {
         [3, 4],
         [5, new Date()],
       ]);
-      const serialized = serialize(original, null);
-      const deserialized = deserialize(serialized, null);
+      const serialized = serialize(original, mockWs);
+      const deserialized = deserialize(serialized, mockWs);
 
       expect(deserialized).toEqual(original);
     });
@@ -113,8 +117,8 @@ describe("Serialization", () => {
 
       const date = new Date();
       const classObject = new Foo("bar", date);
-      const serialized = serialize(classObject, null);
-      const deserialized = deserialize(serialized, null);
+      const serialized = serialize(classObject, mockWs);
+      const deserialized = deserialize(serialized, mockWs);
 
       expect(deserialized).toEqual({
         bar: "bar",
@@ -129,7 +133,9 @@ describe("Serialization", () => {
         bar = "bar";
         circular = this;
       }
-      expect(() => serialize(new Circular(), null)).toThrow(SerialiationError);
+      expect(() => serialize(new Circular(), mockWs)).toThrow(
+        SerialiationError
+      );
     });
   });
 });

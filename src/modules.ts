@@ -1,3 +1,5 @@
+import { FlayerError } from "./error";
+
 /**
  * Single module contents
  */
@@ -27,7 +29,7 @@ type ModuleMap = Map<string, Module>;
 /**
  * Module map
  */
-let moduleMap: ModuleMap = null;
+let moduleMap: ModuleMap | null = null;
 
 /**
  * Gets a function from server modules by traversing the module tree with
@@ -65,7 +67,7 @@ function flattenModules(
 ) {
   Object.keys(module).forEach((key) => {
     const path = [...pathSegments].join("/");
-    const item = module[key] as FunctionOrSubmodule;
+    const item = module[key as keyof typeof module] as FunctionOrSubmodule;
     if (typeof item === "function") {
       // Item is a function - add it to the map
       map.set(path, {
@@ -81,6 +83,9 @@ function flattenModules(
 }
 
 export function getModuleMap() {
+  if (!moduleMap) {
+    throw new FlayerError("Modules not registered");
+  }
   return moduleMap;
 }
 

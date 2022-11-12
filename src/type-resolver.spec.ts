@@ -45,7 +45,7 @@ describe("Type resolver", () => {
     expect(structure.typeParameters).toEqual([]);
 
     const typeNames = Array.from(types.values()).map((type) =>
-      type.getSymbol().getName()
+      type.getSymbol()?.getName()
     );
     expect(typeNames).toEqual(["Foo"]);
   });

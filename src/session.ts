@@ -3,41 +3,14 @@ import { Store } from "express-session";
 import { IncomingMessage } from "http";
 import UID from "uid-safe";
 import { getSessionId } from "./async-store";
-import { ServerConfig } from "./config/server-config";
-import { FlayerError } from "./error";
+import { NormalizedServerConfig } from "./config/server-config";
+import { FlayerConfigError, FlayerError } from "./error";
 import { collapse } from "./utils";
 
 const sessionCookieKey = "flayer-session";
-let store: Store = null;
+let store: Store | null = null;
 
 export interface Session {}
-
-export interface SessionConfig {
-  /**
-   * Cookie configurations
-   */
-  cookie?: {
-    domain?: string;
-    expires?: string;
-    httpOnly?: boolean;
-    maxAge?: number;
-    path?: string;
-    secure?: boolean;
-    sameSite?: "Strict" | "Lax";
-  };
-  /**
-   * Session store
-   *
-   * Accepts express-session compatible stores.
-   */
-  store?: Store;
-  /**
-   * Session secret
-   *
-   * Used for signing session IDs for cookies to avoid session hijacking.
-   */
-  secret: string | string[];
-}
 
 /**
  * Generates a unique session ID.
@@ -53,7 +26,10 @@ function generateSessionId() {
  * @param serverConfig Server config
  * @returns Signed session ID
  */
-function signSessionId(sessionId: string, serverConfig: ServerConfig) {
+function signSessionId(
+  sessionId: string,
+  serverConfig: NormalizedServerConfig
+) {
   const secret =
     typeof serverConfig.session?.secret === "string"
       ? serverConfig.session.secret
@@ -70,7 +46,10 @@ function signSessionId(sessionId: string, serverConfig: ServerConfig) {
  * @param serverConfig Server config
  * @returns Unsigned secret
  */
-function unsignSessionId(signedSessionId: string, serverConfig: ServerConfig) {
+function unsignSessionId(
+  signedSessionId: string,
+  serverConfig: NormalizedServerConfig
+) {
   const secrets =
     typeof serverConfig.session?.secret === "string"
       ? [serverConfig.session.secret]
@@ -89,8 +68,8 @@ function unsignSessionId(signedSessionId: string, serverConfig: ServerConfig) {
  * @param serverConfig
  */
 export function getSessionIdFromCookies(
-  cookies: string,
-  serverConfig: ServerConfig
+  cookies: string | undefined,
+  serverConfig: NormalizedServerConfig
 ) {
   const sessionIdCookie = cookies
     ?.split(";")
@@ -112,7 +91,7 @@ export function getSessionIdFromCookies(
 export function handleHandshakeHeaders(
   req: IncomingMessage,
   headers: string[],
-  serverConfig: ServerConfig
+  serverConfig: NormalizedServerConfig
 ) {
   let sessionId = getSessionIdFromCookies(req.headers["cookie"], serverConfig);
   if (!sessionId) {
@@ -122,17 +101,17 @@ export function handleHandshakeHeaders(
       sessionId,
       serverConfig
     )}`;
-    const { cookie } = serverConfig.session ?? {};
+    const { cookie } = serverConfig.session;
 
     headers.push(
       `Set-Cookie: ${[
         cookieEntry,
-        (cookie?.secure ?? true) && "Secure",
-        (cookie?.httpOnly ?? true) && "HttpOnly",
-        collapse`Max-Age: ${cookie?.maxAge}`,
-        collapse`Domain: ${cookie?.domain}`,
-        collapse`Path: ${cookie?.path}`,
-        collapse`Same-Site: ${cookie?.sameSite}`,
+        cookie.secure && "Secure",
+        cookie.httpOnly && "HttpOnly",
+        collapse`Max-Age: ${cookie.maxAge}`,
+        collapse`Domain: ${cookie.domain}`,
+        collapse`Path: ${cookie.path}`,
+        collapse`Same-Site: ${cookie.sameSite}`,
       ]
         .filter(Boolean)
         .join("; ")}`
@@ -151,19 +130,40 @@ export function setSessionStore(sessionStore: Store) {
 }
 
 /**
+ * Assures that the session store is defined, otherwise throws an error.
+ */
+function assertStoreIsDefined() {
+  if (!store) {
+    throw new FlayerConfigError("Session not configured");
+  }
+}
+
+/**
+ * Tries to get the current session ID from async local storage.
+ *
+ * If not found, throws an error.
+ * @returns Session ID for the current connection
+ */
+function getSessionIdFromAsyncStore() {
+  const sessionId = getSessionId();
+  if (sessionId == null) {
+    throw new FlayerError("Session ID not found for the current connection");
+  }
+  return sessionId;
+}
+
+/**
  * Get current session object.
  * @returns Session
  */
 export async function getSession() {
-  if (!store) {
-    throw new FlayerError("Session not configured");
-  }
-  return new Promise<Session>((resolve, reject) => {
-    store.get(getSessionId(), (error, session) => {
+  return new Promise<Session | null>((resolve, reject) => {
+    assertStoreIsDefined();
+    store!.get(getSessionIdFromAsyncStore(), (error, session) => {
       if (error) {
         return reject(error);
       }
-      resolve(session);
+      resolve(session ?? null);
     });
   });
   // return promisify(new MemoryStore().get)(getSessionId()) as Session;
@@ -174,11 +174,9 @@ export async function getSession() {
  * @param session Session
  */
 export async function setSession(session: Session) {
-  if (!store) {
-    throw new FlayerError("Session not configured");
-  }
   return new Promise<void>((resolve, reject) => {
-    store.set(getSessionId(), session as any, (error) => {
+    assertStoreIsDefined();
+    store!.set(getSessionIdFromAsyncStore(), session as any, (error) => {
       if (error) {
         return reject(error);
       }
@@ -191,11 +189,9 @@ export async function setSession(session: Session) {
  * Destroy current session.
  */
 export async function destroySession() {
-  if (!store) {
-    throw new FlayerError("Session not configured");
-  }
   return new Promise<void>((resolve, reject) => {
-    store.destroy(getSessionId(), (error) => {
+    assertStoreIsDefined();
+    store!.destroy(getSessionIdFromAsyncStore(), (error) => {
       if (error) {
         return reject(error);
       }
