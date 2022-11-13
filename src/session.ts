@@ -62,6 +62,20 @@ function unsignSessionId(
 }
 
 /**
+ * Adds a single cookie value entry into a cookie header string
+ * @param headerValue Cookie header value as a string
+ * @param newCookie New cookie value
+ * @returns New cookie header value as a string
+ */
+function appendCookieToHeader(
+  headerValue: string | undefined,
+  newCookie: string
+) {
+  const cookies = headerValue?.split(/;\s+/) ?? [];
+  return [...cookies, newCookie].join("; ");
+}
+
+/**
  * Tries to parse a session ID from cookies.
  * If not found, generates a new ID.
  * @param cookies
@@ -72,7 +86,7 @@ export function getSessionIdFromCookies(
   serverConfig: NormalizedServerConfig
 ) {
   const sessionIdCookie = cookies
-    ?.split(";")
+    ?.split(/;\s*/)
     .find((cookie) => cookie.startsWith(sessionCookieKey));
   if (sessionIdCookie) {
     const signedId = sessionIdCookie.split("=")[1];
@@ -117,7 +131,10 @@ export function handleHandshakeHeaders(
         .join("; ")}`
     );
     // Add the session to the cookies for the current request
-    req.headers["cookie"] += cookieEntry;
+    req.headers["cookie"] = appendCookieToHeader(
+      req.headers["cookie"],
+      cookieEntry
+    );
   }
 }
 
