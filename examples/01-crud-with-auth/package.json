@@ -1,0 +1,25 @@
+{
+  "name": "01-crud-with-auth",
+  "version": "1.0.0",
+  "description": "This is an example project that demonstrates Flayer's basic functionalities.",
+  "main": "index.js",
+  "scripts": {
+    "test": "playwright test",
+    "test:debug": "PWDEBUG=1 playwright test",
+    "test:codegen": "playwright codegen http://localhost:80"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jlaamanen/flayer-example.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jlaamanen/flayer-example/issues"
+  },
+  "homepage": "https://github.com/jlaamanen/flayer-example#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.28.1"
+  }
+}
