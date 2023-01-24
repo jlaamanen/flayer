@@ -46,7 +46,7 @@
     "esbuild": "^0.14.45",
     "express-session": "^1.17.3",
     "func-loc": "^0.1.16",
-    "get-port": "^5.1.1",
+    "get-port": "^6.1.2",
     "isomorphic-ws": "^4.0.1",
     "ts-morph": "^14.0.0",
     "uid-safe": "^2.1.5",
