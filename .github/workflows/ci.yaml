@@ -10,6 +10,7 @@ on:
 
 env:
   NODE_VERSION: 18
+  E2E_BASE_IMAGE: ghcr.io/${{ github.actor }}/flayer:e2e-base
 
 jobs:
   # Test and build all PRs, pushes to master and releases
@@ -33,12 +34,99 @@ jobs:
             client-lib
           key: ${{ github.sha }}
 
+  # Pre-build base image for E2E tests (with npm linked Flayer)
+  build-e2e-base-image:
+    name: Build E2E base image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push base image to registry
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          push: true
+          tags: ${{ env.E2E_BASE_IMAGE }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Run the E2E tests
+  run-e2e-tests:
+    name: Run E2E tests
+    runs-on: ubuntu-latest
+    needs: [build-e2e-base-image]
+    strategy:
+      matrix:
+        directory: ["01-crud-with-auth"]
+    defaults:
+      run:
+        working-directory: examples/${{ matrix.directory }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: ./examples/${{ matrix.directory }}/package-lock.json
+      # Install packages
+      - run: npm ci
+      # Try to get the Playwright browsers from cache
+      - name: Get installed Playwright version
+        id: playwright-version
+        run: echo "version=$(npm ls @playwright/test --json | jq --raw-output '.dependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT
+      - uses: actions/cache@v3
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+      # Install Playwright browsers unless found from the cache
+      - name: Install Playwright browsers and OS dependencies
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps
+      # If Playwright browsers were found from cache, only install OS dependencies
+      # TODO: this should also be cached somehow
+      - name: Install Playwright OS dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps
+      # Start the stack up and run tests
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Start up the example
+        run: BASE_IMAGE=${{ env.E2E_BASE_IMAGE }} docker compose up -d --wait
+        timeout-minutes: 5
+      - run: docker compose logs
+        if: failure()
+      - run: npm test
+      # Upload test results if it failed
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: e2e-test-report-${{ matrix.directory }}
+          # The action doesn't respect the working directory: https://github.com/actions/upload-artifact/issues/232
+          path: examples/${{ matrix.directory }}/playwright-report/
+          retention-days: 30
+
   # Publish the package to NPM on release
   publish:
     name: Publish
     if: ${{ github.event_name == 'release' }}
     runs-on: ubuntu-latest
-    needs: [test-and-build]
+    needs: [test-and-build, run-e2e-tests]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3

@@ -1,0 +1,12 @@
+{
+  "name": "server-pkg",
+  "version": "0.0.1",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "prepare": "npm install --ignore-scripts"
+  },
+  "dependencies": {
+    "flayer": "^0.0.0-alpha.17"
+  }
+}

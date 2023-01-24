@@ -1,0 +1,15 @@
+version: '3.8'
+services:
+  server:
+    build:
+      context: .
+      args:
+        - BASE_IMAGE=${BASE_IMAGE:-flayer:e2e-base}
+    ports:
+      - 1234:1234
+      - 80:80
+    healthcheck:
+      test: curl -f localhost
+      interval: 5s
+      timeout: 5s
+      retries: 10

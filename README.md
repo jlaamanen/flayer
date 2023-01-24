@@ -75,8 +75,8 @@ Flayer (short for _function layer_) is a Node.js library, which allows you to "e
 
 ## More detailed examples
 
-Check https://github.com/jlaamanen/flayer-example for a more thorough example. To try it out yourself, copy the example repository by running:
+Check https://github.com/jlaamanen/examples/01-crud-with-auth for a more thorough example. To try it out yourself, copy the example repository by running:
 
 ```sh
-npx degit jlaamanen/flayer-example
+npx degit jlaamanen/flayer/examples/01-crud-with-auth
 ```

@@ -18,6 +18,11 @@ export function startWebSocketServer(config: NormalizedServerConfig) {
     port,
   });
 
+  // If an onRequest handler is set, make the WS server forward requests there
+  if (config.onRequest != null) {
+    wss.on("request", config.onRequest);
+  }
+
   // Intercept handshake request when about to send headers
   wss.on("headers", (headers, req) => {
     if (config.session) {
