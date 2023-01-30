@@ -10,7 +10,7 @@ on:
 
 env:
   NODE_VERSION: 18
-  E2E_BASE_IMAGE: ghcr.io/${{ github.repository }}:e2e-base
+  E2E_BASE_IMAGE: ghcr.io/${{ github.repository }}:latest
 
 jobs:
   # Test and build all PRs, pushes to master and releases
