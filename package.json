@@ -48,7 +48,7 @@
     "func-loc": "^0.1.16",
     "get-port": "^6.1.2",
     "isomorphic-ws": "^5.0.0",
-    "ts-morph": "^14.0.0",
+    "ts-morph": "^18.0.0",
     "uid-safe": "^2.1.5",
     "winston": "^3.8.2",
     "ws": "^8.12.0"
