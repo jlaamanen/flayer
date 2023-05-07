@@ -97,7 +97,7 @@ function getCustomTypeDeclaration(type: Type) {
         declaration
       ): declaration is InterfaceDeclaration | TypeAliasDeclaration =>
         // Only pick ambient types (.d.ts) if they're inside the project
-        (!(declaration.getFlags() & NodeFlagAmbient) ||
+        (declaration.getFlags() & NodeFlagAmbient ||
           (declaration.getSourceFile() as any)._inProject) &&
         [
           SyntaxKind.InterfaceDeclaration,
