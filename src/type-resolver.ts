@@ -1,4 +1,5 @@
 import { locate } from "func-loc";
+import { SourceMapConsumer } from "source-map";
 import {
   ArrowFunction,
   FunctionDeclaration,
@@ -15,8 +16,8 @@ import {
   SyntaxKind,
   Type,
   TypeAliasDeclaration,
+  ts,
 } from "ts-morph";
-import { Service } from "ts-node";
 import { FlayerError } from "./error";
 
 export interface ResolvedFunction {
@@ -64,11 +65,11 @@ function getFunctionNode(sourceFile: SourceFile, position: number) {
 export function getProject(options: ProjectOptions = {}) {
   // If project is not found in cache, create one
   if (!project) {
-    const service = process[
-      require("ts-node").REGISTER_INSTANCE as keyof typeof process
-    ] as Service;
+    const tsConfigFilePath =
+      ts.findConfigFile(process.cwd(), ts.sys.fileExists, "tsconfig.json") ??
+      "./tsconfig.json";
     project = new Project({
-      tsConfigFilePath: (service as any)?.configFilePath,
+      tsConfigFilePath,
       ...(options ?? {}),
     });
   }
@@ -319,12 +320,40 @@ export async function resolveFunction(fn: (...args: any[]) => any) {
   if (typeof fn !== "function") {
     throw new Error("Expected a function");
   }
-  const { path, line, column } = await locate(fn, { sourceMap: true });
+  let { path, line, column } = await locate(fn, { sourceMap: true });
   const project = getProject();
+  // Clear any existing source files
+  project.getSourceFiles().map(project.removeSourceFile);
 
   // If the path wasn't included in files, add it to the project (e.g. .js files)
-  const sourceFile =
+  let sourceFile =
     project.getSourceFile(path) ?? project.addSourceFileAtPath(path);
+
+  // In case the file contains a source map, use it to correct the position
+  const sourceMapLine = sourceFile
+    .getText()
+    .split(/\n/)
+    .find((line) => line.startsWith("//# sourceMappingURL"));
+
+  if (sourceMapLine) {
+    const [, data] = sourceMapLine.split("data:application/json;base64,");
+    const sourceMap = JSON.parse(Buffer.from(data, "base64").toString());
+    await SourceMapConsumer.with(sourceMap, null, (consumer) => {
+      const originalPosition = consumer.originalPositionFor({ line, column });
+      if (
+        originalPosition.source &&
+        originalPosition.line != null &&
+        originalPosition.column != null
+      ) {
+        path = originalPosition.source;
+        sourceFile =
+          project.getSourceFile(path) ?? project.addSourceFileAtPath(path);
+        line = originalPosition.line;
+        column = originalPosition.column;
+      }
+    });
+  }
+
   const position = getPosForLineAndColumn(sourceFile, line, column);
   const node = getFunctionNode(sourceFile, position);
 

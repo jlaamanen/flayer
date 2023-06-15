@@ -14,9 +14,16 @@ const defaultPort = 1234;
 export function startWebSocketServer(config: NormalizedServerConfig) {
   const port = config.port ?? defaultPort;
 
-  const wss = new WebSocketServer({
-    port,
-  });
+  // Use given HTTP server if provided, otherwise start a new one in the configured port
+  const wss = new WebSocketServer(
+    config.server != null
+      ? {
+          server: config.server,
+        }
+      : {
+          port,
+        }
+  );
 
   // If an onRequest handler is set, make the WS server forward requests there
   if (config.onRequest != null) {
@@ -55,7 +62,11 @@ export function startWebSocketServer(config: NormalizedServerConfig) {
   });
 
   logger.info("");
-  logger.info(`Flayer started on port ${port}`);
+  if (config.server != null) {
+    logger.info(`Flayer started`);
+  } else {
+    logger.info(`Flayer started on port ${port}`);
+  }
 }
 
 /**

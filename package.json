@@ -21,7 +21,7 @@
   "scripts": {
     "test": "jest",
     "build:pkg": "tsc",
-    "build:client-lib": "esbuild --bundle src/client-lib/index.ts --outdir=client-lib --minify --sourcemap --splitting --format=esm --target=esnext",
+    "build:client-lib": "esbuild --bundle src/client-lib/index.ts --outdir=client-lib --minify --sourcemap --splitting --format=esm",
     "build": "npm run build:pkg && npm run build:client-lib",
     "watch:pkg": "tsc --watch",
     "watch:client-lib": "npm run build:client-lib -- --watch",
@@ -48,6 +48,7 @@
     "func-loc": "^0.1.16",
     "get-port": "^6.1.2",
     "isomorphic-ws": "^5.0.0",
+    "source-map": "^0.7.4",
     "ts-morph": "^18.0.0",
     "uid-safe": "^2.1.5",
     "winston": "^3.8.2",

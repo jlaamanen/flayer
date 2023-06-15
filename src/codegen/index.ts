@@ -28,7 +28,7 @@ import {
 import { mergeSets } from "../utils";
 
 function generateJsFile(modulePath: string, functionNames: string[]) {
-  return `import { executeFlayerFunction } from "flayer/client-lib";
+  return `import { executeFlayerFunction } from "flayer/client-lib/index.js";
 
 ${functionNames
   .map(
@@ -102,7 +102,7 @@ export async function generateModuleIndex(
   modulePaths: string[]
 ) {
   const project = getProject();
-  const file = project.createSourceFile("index.d.ts");
+  const file = project.createSourceFile("index.d.ts", "", { overwrite: true });
 
   // Add triple-slash references to each module (makes IntelliSense work better)
   file.addStatements(
@@ -140,15 +140,31 @@ export async function generateModuleIndex(
 /**
  * Generates package.json for the generated package
  * @param config Client package config
+ * @param modulePaths Module paths (used for generating package entry points)
  * @returns Package.json contents
  */
-function generatePackageJson(config: ClientPackageConfig) {
+function generatePackageJson(
+  config: ClientPackageConfig,
+  modulePaths: string[]
+) {
   return JSON.stringify(
     {
       name: config.packageJson?.name,
       version: config.packageJson?.version,
       main: "index.js",
+      type: "module",
       types: "index.d.ts",
+      exports: {
+        ".": "./index.js",
+        // Generate a package entry point for every module
+        ...modulePaths.reduce(
+          (exports, modulePath) => ({
+            ...exports,
+            [`./${modulePath}`]: `./${modulePath}/index.js`,
+          }),
+          {}
+        ),
+      },
       scripts: {
         // This script is needed for the package to install its own dependencies on local npm install
         prepare: "npm install --ignore-scripts",
@@ -167,6 +183,7 @@ function generatePackageJson(config: ClientPackageConfig) {
  * @param config Client package configuration
  */
 export async function generatePackage(config: NormalizedClientPackageConfig) {
+  // TODO omaan funktioonsa ehkäpä
   // Clean up the package
   if (existsSync(config.path)) {
     // Check if the path is a directory
@@ -211,7 +228,7 @@ export async function generatePackage(config: NormalizedClientPackageConfig) {
     writeFile(`${config.path}/${file.fileName}`, file.text);
   });
 
-  const packageJson = generatePackageJson(config);
+  const packageJson = generatePackageJson(config, modulePaths);
   writeFile(`${config.path}/package.json`, packageJson);
 }
 
