@@ -63,19 +63,22 @@ export async function handleInvocationMessage(
   ws: WebSocket
 ) {
   // Try to find the requested function from the modules
-  const fn = getFunction(message.modulePath, message.functionName);
+  const fn = await getFunction(message.modulePath, message.functionName).catch(
+    (error) => {
+      // Function was not found - let the client know via WS
+      const errorMessage: ResultErrorMessage = {
+        type: "result",
+        id: message.id,
+        error: {
+          name: "FlayerError",
+          message: (error as Error).message,
+        },
+      };
+      ws.send(JSON.stringify(errorMessage));
+    }
+  );
   if (!fn) {
-    // Function was not found - let the client know via WS
-    const errorMessage: ResultErrorMessage = {
-      type: "result",
-      id: message.id,
-      error: {
-        name: "FlayerError",
-        message: `Function "${message.modulePath}/${message.functionName}" not found`,
-      },
-    };
-    ws.send(JSON.stringify(errorMessage));
-    return;
+    return null;
   }
 
   // Function was found - proceed with argument deserialization

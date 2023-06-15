@@ -35,7 +35,7 @@ let moduleMap: ModuleMap | null = null;
  * Gets a function from server modules by traversing the module tree with
  * given path.
  */
-export function getFunction(modulePath: string, functionName: string) {
+export async function getFunction(modulePath: string, functionName: string) {
   if (!moduleMap) {
     throw new Error("Modules not registered");
   }

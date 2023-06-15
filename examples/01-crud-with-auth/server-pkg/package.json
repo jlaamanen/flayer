@@ -7,6 +7,6 @@
     "prepare": "npm install --ignore-scripts"
   },
   "dependencies": {
-    "flayer": "^0.0.0-alpha.17"
+    "flayer": "0.0.0-alpha.17"
   }
 }

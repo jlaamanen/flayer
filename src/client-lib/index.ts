@@ -18,13 +18,13 @@ declare global {
   }
 }
 
-function get<Key extends keyof typeof window["flayer"]>(key: Key) {
+function get<Key extends keyof (typeof window)["flayer"]>(key: Key) {
   return window.flayer[key];
 }
 
-function set<Key extends keyof typeof window["flayer"]>(
+function set<Key extends keyof (typeof window)["flayer"]>(
   key: Key,
-  value: typeof window["flayer"][Key]
+  value: (typeof window)["flayer"][Key]
 ) {
   if (!window.flayer) {
     window.flayer = {

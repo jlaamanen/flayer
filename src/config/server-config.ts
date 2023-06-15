@@ -1,5 +1,5 @@
 import { Store } from "express-session";
-import { Server } from "ws";
+import { Server, ServerOptions } from "ws";
 import { FlayerConfigError } from "../error";
 import { DeepRequired } from "../utils";
 
@@ -10,7 +10,7 @@ type RequestHandler = (this: Server, ...args: any[]) => void;
  *
  * For internal use.
  */
-export interface ServerConfig {
+export type ServerConfig = {
   /**
    * Flayer server port
    *
@@ -30,8 +30,12 @@ export interface ServerConfig {
   /**
    * Session configuration
    */
-  session?: SessionConfig;
-}
+  session: SessionConfig;
+  /**
+   * Existing HTTP server
+   */
+  server?: ServerOptions["server"] | null;
+};
 
 export interface SessionConfig {
   /**
@@ -97,9 +101,10 @@ export interface SessionConfig {
  * For internal use only.
  */
 export type NormalizedServerConfig = DeepRequired<
-  Omit<ServerConfig, "onRequest" | "session">
+  Omit<ServerConfig, "onRequest" | "session" | "server">
 > & {
   onRequest: RequestHandler | null;
+  server: ServerOptions["server"] | null;
   session: DeepRequired<Omit<SessionConfig, "store">> & {
     store: Store | null;
   };
@@ -120,6 +125,7 @@ export function normalizeServerConfig(
     port: config?.port ?? 1234,
     maxListeners: config?.maxListeners ?? 0,
     onRequest: config?.onRequest ?? null,
+    server: config?.server ?? null,
     session: {
       cookie: {
         domain: null,
