@@ -20,6 +20,6 @@
   },
   "homepage": "https://github.com/jlaamanen/flayer-example#readme",
   "devDependencies": {
-    "@playwright/test": "^1.33.0"
+    "@playwright/test": "^1.36.1"
   }
 }
