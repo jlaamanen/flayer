@@ -8,18 +8,10 @@
     "test:debug": "PWDEBUG=1 playwright test",
     "test:codegen": "playwright codegen http://localhost:80"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/jlaamanen/flayer-example.git"
-  },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/jlaamanen/flayer-example/issues"
-  },
-  "homepage": "https://github.com/jlaamanen/flayer-example#readme",
   "devDependencies": {
-    "@playwright/test": "^1.33.0"
+    "@playwright/test": "^1.35.1"
   }
 }

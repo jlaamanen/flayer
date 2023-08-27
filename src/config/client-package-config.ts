@@ -17,18 +17,17 @@ export interface ClientPackageConfig {
    */
   flayerVersion?: string;
   /**
-   * Generated package.json overrides.
+   * Package name
+   *
+   * @default "server-pkg"
    */
-  packageJson?: {
-    /**
-     * Package name
-     */
-    name?: string;
-    /**
-     * Package version
-     */
-    version?: string;
-  };
+  packageName?: string;
+  /**
+   * Package version
+   *
+   * @default "0.0.1"
+   */
+  packageVersion?: string;
 }
 
 /**
@@ -51,9 +50,7 @@ export function normalizeClientPackageConfig(
     // Get current package version from package.json
     flayerVersion:
       config?.flayerVersion ?? require("../../package.json").version,
-    packageJson: {
-      name: config?.packageJson?.name ?? "server-pkg",
-      version: config?.packageJson?.version ?? "0.0.1",
-    },
+    packageName: config?.packageName ?? "server-pkg",
+    packageVersion: config?.packageVersion ?? "0.0.1",
   };
 }

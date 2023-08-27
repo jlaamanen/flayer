@@ -64,7 +64,7 @@ jobs:
     needs: [build-e2e-base-image]
     strategy:
       matrix:
-        directory: ["01-crud-with-auth"]
+        directory: ["01-crud-with-auth", "02-sveltekit"]
     defaults:
       run:
         working-directory: examples/${{ matrix.directory }}

@@ -1,19 +1,22 @@
 import { MemoryStore } from "express-session";
+import { WebSocketServer } from "ws";
 import { generatePackage } from "./codegen";
 import {
   ClientPackageConfig,
   normalizeClientPackageConfig,
 } from "./config/client-package-config";
-import { normalizeServerConfig, ServerConfig } from "./config/server-config";
+import { ServerConfig, normalizeServerConfig } from "./config/server-config";
 import { FlayerError } from "./error";
 import { logger } from "./logger";
-import { getModuleMap, Modules, registerModules } from "./modules";
+import { Modules, getModuleMap, registerModules } from "./modules";
 import { setSessionStore } from "./session";
 import { startWebSocketServer } from "./websocket/server";
 
 // Exposed library functions/interfaces
-export { destroySession, getSession, Session, setSession } from "./session";
+export { Session, destroySession, getSession, setSession } from "./session";
 export { onDisconnect } from "./websocket/server";
+
+let wss: WebSocketServer | null = null;
 
 /**
  * Creates a Flayer server object with provided modules.
@@ -53,7 +56,14 @@ export function createServer(modules: Modules) {
         }
       }
 
-      startWebSocketServer(normalizedConfig);
+      wss?.close();
+      wss = startWebSocketServer(normalizedConfig);
+    },
+    /**
+     * Stops the Flayer server.
+     */
+    stop() {
+      wss?.close();
     },
     /**
      * Generates client-side package for invoking Flayer functions.
@@ -67,9 +77,10 @@ export function createServer(modules: Modules) {
 
       logger.info("");
       logger.info(
-        `🎁 Generated client package "${
-          normalizedConfig.packageJson.name
-        }" in ${((Date.now() - start) / 1000).toFixed(3)} s`
+        `🎁 Generated client package "${normalizedConfig.packageName}" in ${(
+          (Date.now() - start) /
+          1000
+        ).toFixed(3)} s`
       );
     },
   };

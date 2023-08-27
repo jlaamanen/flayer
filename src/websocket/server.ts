@@ -67,6 +67,8 @@ export function startWebSocketServer(config: NormalizedServerConfig) {
   } else {
     logger.info(`Flayer started on port ${port}`);
   }
+
+  return wss;
 }
 
 /**

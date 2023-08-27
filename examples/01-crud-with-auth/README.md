@@ -2,6 +2,12 @@
 
 This is an example project that demonstrates Flayer's basic functionalities.
 
+Clone this example:
+
+```sh
+npx degit jlaamanen/flayer/examples/01-crud-with-auth 01-crud-with-auth
+```
+
 ### Client
 
 Svelte TypeScript template.
