@@ -13,7 +13,7 @@ async function login(
 }
 
 async function createProduct(page: Page, name: string, price: number) {
-  await new Promise<void>(async (resolve) => {
+  await new Promise<void>((resolve) => {
     const nameDialogHandler = (dialog: Dialog) => {
       const priceDialogHandler = (dialog: Dialog) => {
         page.removeListener("dialog", priceDialogHandler);
@@ -57,7 +57,7 @@ test("Create and delete a product as admin", async ({ page, browser }) => {
     .name()} - ${Date.now()}`;
   await createProduct(page, newProductName, 123);
 
-  let card = getProductCard(page, newProductName);
+  const card = getProductCard(page, newProductName);
   await expect(card).toBeVisible();
 
   // Delete the product and expect it to disappear

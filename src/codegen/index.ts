@@ -104,13 +104,6 @@ export async function generateModuleIndex(
   const project = getProject();
   const file = project.createSourceFile("index.d.ts", "", { overwrite: true });
 
-  // Add triple-slash references to each module (makes IntelliSense work better)
-  file.addStatements(
-    modulePaths.map(
-      (modulePath) => `/// <reference path="./${modulePath}/index.d.ts" />`
-    )
-  );
-
   // Declare a module for the built-in functions
   const moduleDeclaration = file.addModule({
     name: `"${packageName}"`,
@@ -149,8 +142,8 @@ function generatePackageJson(
 ) {
   return JSON.stringify(
     {
-      name: config.packageJson?.name,
-      version: config.packageJson?.version,
+      name: config.packageName,
+      version: config.packageVersion,
       main: "index.js",
       type: "module",
       types: "index.d.ts",
@@ -220,7 +213,7 @@ export async function generatePackage(config: NormalizedClientPackageConfig) {
   // Generate index.d.ts for the package entry point
   const modulePaths = Array.from(getModuleMap().keys());
   const moduleIndex = await generateModuleIndex(
-    config.packageJson.name,
+    config.packageName,
     modulePaths
   );
   writeFile(`${config.path}/index.d.ts`, moduleIndex.dts);
