@@ -1,3 +1,3 @@
-import { executeFlayerFunction } from "flayer/client-lib/index.js";
+import * as lib from "flayer/client-lib";
 
-export async function greet(...args) { return executeFlayerFunction("hello", "greet", args); };
+export async function greet(...args) { return lib.executeFlayerFunction("hello", "greet", args); };

@@ -1,0 +1,19 @@
+{
+  "name": "rest-server",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "tsx --watch src/app",
+    "start": "tsx src/app"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "fastify": "^4.22.0",
+    "server": "file:../server-pkg",
+    "tsx": "^3.12.7"
+  }
+}

@@ -9,7 +9,7 @@ on:
     types: [released]
 
 env:
-  NODE_VERSION: 18
+  NODE_VERSION: 20
   E2E_BASE_IMAGE: ghcr.io/${{ github.repository }}:latest
 
 jobs:
@@ -147,6 +147,27 @@ jobs:
       - run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      # After publish, update all Flayer versions used in the examples
+      - name: Update Flayer version to examples
+        run: |
+          # Navigate to the examples directory
+          cd examples
+
+          # Use a find command to loop through all package.json files
+          find . -name 'package.json' | while read -r package_file; do
+            # Check if the package "flayer" exists in the current package.json
+            if grep -q "\"flayer\":" "$package_file"; then
+              # Navigate to the directory containing the package.json
+              dir=$(dirname "$package_file")
+              cd "$dir"
+
+              # Run the npm install command for flayer with the target version
+              npm install flayer@"${{ github.event.release.tag_name }}"
+
+              # Navigate back to the root examples directory for the next iteration
+              cd -
+            fi
+          done
       # After a successful publish, commit the new version to the repository (will not trigger new workflows!)
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:

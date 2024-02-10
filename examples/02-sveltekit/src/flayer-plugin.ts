@@ -7,8 +7,7 @@ const flayerServer = createServer({
 
 if (process.env.NODE_ENV === 'development') {
   await flayerServer.generatePackage({
-    path: './server-pkg',
-    packageName: 'server'
+    path: './server-pkg'
   });
 }
 
@@ -16,7 +15,7 @@ function startServer() {
   flayerServer.start({
     port: 1234,
     session: {
-      secret: 'lolz'
+      secret: 'V3ryZ3kr3tW0rd'
     }
   });
 }

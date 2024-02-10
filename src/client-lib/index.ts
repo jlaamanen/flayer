@@ -8,32 +8,32 @@ import { connect, sendMessage, waitForMessage } from "../websocket/client";
  * For internal use only - strip these declarations from generated declarations
  * @internal
  */
-declare global {
-  interface Window {
-    flayer: {
-      invocationId: number;
-      ws: WebSocket | null;
-      config: ClientConfig | null;
-    };
-  }
+interface Store {
+  flayer: {
+    invocationId: number;
+    ws: WebSocket | null;
+    config: ClientConfig | null;
+  };
 }
 
-function get<Key extends keyof (typeof window)["flayer"]>(key: Key) {
-  return window.flayer[key];
+const store = globalThis as unknown as Store;
+
+function get<Key extends keyof Store["flayer"]>(key: Key) {
+  return store.flayer?.[key];
 }
 
-function set<Key extends keyof (typeof window)["flayer"]>(
+function set<Key extends keyof Store["flayer"]>(
   key: Key,
-  value: (typeof window)["flayer"][Key]
+  value: Store["flayer"][Key]
 ) {
-  if (!window.flayer) {
-    window.flayer = {
+  if (!store.flayer) {
+    store.flayer = {
       invocationId: 0,
       ws: null,
       config: null,
     };
   }
-  window.flayer[key] = value;
+  store.flayer[key] = value;
 }
 
 /**
@@ -60,7 +60,7 @@ export async function executeFlayerFunction(
   }
 
   let id = get("invocationId");
-  set("invocationId", id + 1);
+  set("invocationId", (id ?? 0) + 1);
   const data = serialize(args, ws);
   sendMessage(ws, {
     type: "invocation",

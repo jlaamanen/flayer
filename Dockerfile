@@ -3,7 +3,7 @@
 # Contains the current version of Flayer built & npm linked
 
 
-FROM node:18.10-alpine
+FROM node:20-alpine
 
 WORKDIR /flayer
 

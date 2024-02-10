@@ -28,12 +28,12 @@ import {
 import { mergeSets } from "../utils";
 
 function generateJsFile(modulePath: string, functionNames: string[]) {
-  return `import { executeFlayerFunction } from "flayer/client-lib/index.js";
+  return `import * as lib from "flayer/client-lib";
 
 ${functionNames
   .map(
     (name) =>
-      `export async function ${name}(...args) { return executeFlayerFunction("${modulePath}", "${name}", args); };`
+      `export async function ${name}(...args) { return lib.executeFlayerFunction("${modulePath}", "${name}", args); };`
   )
   .join("\n")}`;
 }
@@ -144,11 +144,16 @@ function generatePackageJson(
     {
       name: config.packageName,
       version: config.packageVersion,
-      main: "index.js",
+      main: "node.cjs",
       type: "module",
       types: "index.d.ts",
       exports: {
-        ".": "./index.js",
+        ".": {
+          import: "./node.mjs",
+          require: "./node.cjs",
+          browser: "./browser.js",
+          node: "./node.cjs",
+        },
         // Generate a package entry point for every module
         ...modulePaths.reduce(
           (exports, modulePath) => ({
@@ -176,7 +181,6 @@ function generatePackageJson(
  * @param config Client package configuration
  */
 export async function generatePackage(config: NormalizedClientPackageConfig) {
-  // TODO omaan funktioonsa ehkäpä
   // Clean up the package
   if (existsSync(config.path)) {
     // Check if the path is a directory

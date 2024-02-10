@@ -11,7 +11,7 @@
       "browser": "./browser.js",
       "node": "./node.cjs"
     },
-    "./hello": "./hello/index.js"
+    "./greet": "./greet/index.js"
   },
   "scripts": {
     "prepare": "npm install --ignore-scripts"

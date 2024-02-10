@@ -1,0 +1,18 @@
+{
+  "name": "flayer-server",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "NODE_ENV=development tsx --watch src/app",
+    "start": "tsx src/app"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "flayer": "^0.1.1",
+    "tsx": "^3.12.7"
+  }
+}

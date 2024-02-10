@@ -13,10 +13,6 @@ const server = createServer({
 if (process.env.NODE_ENV === "development") {
   server.generatePackage({
     path: "../server-pkg",
-    packageJson: {
-      name: "server-pkg",
-      version: "0.0.1",
-    },
   });
 }
 
