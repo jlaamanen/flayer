@@ -76,7 +76,7 @@ jobs:
           cache: "npm"
           cache-dependency-path: ./examples/${{ matrix.directory }}/package-lock.json
       # Install packages
-      - run: npm ci
+      - run: npm ci --ignore-scripts
       # Try to get the Playwright browsers from cache
       - name: Get installed Playwright version
         id: playwright-version
