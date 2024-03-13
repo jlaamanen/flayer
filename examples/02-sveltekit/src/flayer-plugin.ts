@@ -5,10 +5,17 @@ const flayerServer = createServer({
   hello: require('./modules/hello')
 });
 
-if (process.env.NODE_ENV === 'development') {
+const mode = process.env.MODE?.split(',') ?? ['server'];
+
+if (mode.includes('generate')) {
   await flayerServer.generatePackage({
     path: './server-pkg'
   });
+}
+
+// Exit the entire process if server shouldn't be started
+if (!mode.includes('server')) {
+  process.exit(0);
 }
 
 function startServer() {

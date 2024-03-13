@@ -2,38 +2,35 @@
 ARG BASE_IMAGE
 FROM $BASE_IMAGE AS base
 
-# Client build stage
-FROM base AS client-build
+##
+# Build stage
+##
+FROM base AS build
 
+# All files need to be copied right away for the preinstall & postinstall scripts to work
+WORKDIR /app
+COPY client ./client
+COPY server ./server
+
+# Build server
+WORKDIR /app/server
+RUN npm ci && npm run build
+
+# Install client's dependencies
 WORKDIR /app/client
-
-COPY client/package*.json .
 RUN npm ci
 
-# Copy & npm link the server package after installing all dependencies
+# Link Flayer in the server package after installing all dependencies
 WORKDIR /app/server-pkg
-
-COPY server-pkg .
 RUN npm link flayer
 
-# Back to client
+# Go back to client to build the final bundle
 WORKDIR /app/client
-
-COPY client .
 RUN npm run build
 
-# Server build stage
-FROM base AS server-build
-
-WORKDIR /app/server
-
-COPY server/package*.json .
-RUN npm ci
-
-COPY server .
-RUN npm run build
-
-# Final server image
+##
+# Runnable server stage
+##
 FROM base AS run
 
 # Install curl for healthcheck
@@ -41,8 +38,8 @@ RUN apk update && apk add curl
 
 WORKDIR /app
 
-COPY --from=server-build /app/server ./
-COPY --from=client-build /app/client/dist ./static/
+COPY --from=build /app/server ./
+COPY --from=build /app/client/dist ./static/
 
 # Link the runtime Flayer here to resolve the symlink correctly
 RUN npm link flayer

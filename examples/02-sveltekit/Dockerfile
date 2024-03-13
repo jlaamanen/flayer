@@ -7,18 +7,17 @@ RUN apk update && apk add curl
 
 WORKDIR /app
 
-COPY package*.json .
-RUN npm ci
-RUN npm link flayer
+COPY . .
+# Npm link isn't sufficient for the postinstall script - install Flayer locally
+RUN npm i /flayer
+RUN npm ci && npm link flayer
 
 # Copy & npm link the server package after installing all dependencies
 WORKDIR /app/server-pkg
-COPY server-pkg .
-RUN npm link flayer
+RUN npm ci && npm link flayer
 
 # Build the application
 WORKDIR /app
-COPY . .
 RUN npm run build
 
 

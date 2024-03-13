@@ -1,4 +1,6 @@
 node_modules
+dist
+/server-pkg
 /test-results/
 /playwright-report/
 /playwright/.cache/

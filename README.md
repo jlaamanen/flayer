@@ -70,13 +70,9 @@ Flayer (short for _function layer_) is a Node.js library, which allows you to "e
    ```ts
    import { hello } from "server-pkg/someModule";
 
-   console.log(hello("World")); // "Hello World!"
+   console.log(await hello("World")); // "Hello World!"
    ```
 
 ## More detailed examples
 
-Check https://github.com/jlaamanen/flayer/tree/master/examples/01-crud-with-auth for a more thorough example. To try it out yourself, copy the example repository by running:
-
-```sh
-npx degit jlaamanen/flayer/examples/01-crud-with-auth
-```
+Check https://github.com/jlaamanen/flayer/tree/master/examples for more thorough examples.

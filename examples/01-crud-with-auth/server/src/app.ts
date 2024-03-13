@@ -10,22 +10,26 @@ const server = createServer({
   user: require("./modules/user"),
 });
 
-if (process.env.NODE_ENV === "development") {
+const mode = process.env.MODE?.split(",") ?? ["server"];
+
+if (mode.includes("generate")) {
   server.generatePackage({
     path: "../server-pkg",
   });
 }
 
-server.start({
-  port,
-  session: {
-    secret: "V3ryZ3kr3tW0rd",
-  },
-});
+if (mode.includes("server")) {
+  server.start({
+    port,
+    session: {
+      secret: "V3ryZ3kr3tW0rd",
+    },
+  });
 
-// Serve static frontend assets for the production image
-const staticFileServer = fastify();
-staticFileServer.register(fastifyStatic, {
-  root: resolve(__dirname, "../static"),
-});
-staticFileServer.listen({ port: 80, host: "0.0.0.0" });
+  // Serve static frontend assets for the production image
+  const staticFileServer = fastify();
+  staticFileServer.register(fastifyStatic, {
+    root: resolve(__dirname, "../static"),
+  });
+  staticFileServer.listen({ port: 80, host: "0.0.0.0" });
+}

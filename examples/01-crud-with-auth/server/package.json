@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "NODE_ENV=development nodemon src/app.ts",
+    "dev": "MODE=generate,server nodemon src/app.ts",
     "build": "tsc",
-    "start": "node dist/app.js"
+    "start": "node dist/app.js",
+    "postinstall": "MODE=generate ts-node src/app"
   },
   "keywords": [],
   "author": "",
