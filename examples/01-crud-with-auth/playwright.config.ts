@@ -1,7 +1,6 @@
-import type { PlaywrightTestConfig } from "@playwright/test";
-import { devices } from "@playwright/test";
+import { defineConfig, devices } from "@playwright/test";
 
-const config: PlaywrightTestConfig = {
+export default defineConfig({
   testDir: "./e2e",
   timeout: 30 * 1000,
   expect: {
@@ -39,6 +38,4 @@ const config: PlaywrightTestConfig = {
       },
     },
   ],
-};
-
-export default config;
+});

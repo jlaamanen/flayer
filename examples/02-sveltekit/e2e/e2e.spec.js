@@ -1,4 +1,4 @@
-import { Dialog, expect, test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 test('Greet', async ({ page }) => {
   await page.goto('http://localhost/');
@@ -7,8 +7,8 @@ test('Greet', async ({ page }) => {
 
   await page.getByPlaceholder('Name').fill(name);
 
-  const dialogMessage = await new Promise<string>((resolve) => {
-    const nameDialogHandler = (dialog: Dialog) => {
+  const dialogMessage = await new Promise((resolve) => {
+    const nameDialogHandler = (dialog) => {
       page.removeListener('dialog', nameDialogHandler);
       resolve(dialog.message());
     };

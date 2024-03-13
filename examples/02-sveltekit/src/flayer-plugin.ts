@@ -5,18 +5,24 @@ const flayerServer = createServer({
   hello: require('./modules/hello')
 });
 
-if (process.env.NODE_ENV === 'development') {
+const mode = process.env.MODE?.split(',') ?? ['server'];
+
+if (mode.includes('generate')) {
   await flayerServer.generatePackage({
-    path: './server-pkg',
-    packageName: 'server'
+    path: './server-pkg'
   });
+}
+
+// Exit the entire process if server shouldn't be started
+if (!mode.includes('server')) {
+  process.exit(0);
 }
 
 function startServer() {
   flayerServer.start({
     port: 1234,
     session: {
-      secret: 'lolz'
+      secret: 'V3ryZ3kr3tW0rd'
     }
   });
 }

@@ -19,7 +19,7 @@ export interface ClientPackageConfig {
   /**
    * Package name
    *
-   * @default "server-pkg"
+   * @default "server"
    */
   packageName?: string;
   /**
@@ -50,7 +50,7 @@ export function normalizeClientPackageConfig(
     // Get current package version from package.json
     flayerVersion:
       config?.flayerVersion ?? require("../../package.json").version,
-    packageName: config?.packageName ?? "server-pkg",
+    packageName: config?.packageName ?? "server",
     packageVersion: config?.packageVersion ?? "0.0.1",
   };
 }
